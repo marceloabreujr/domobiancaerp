@@ -29,6 +29,12 @@ import {
   listReportsByConstruction, listAllReports, createReport, deleteReport,
   listImagesByConstruction, listAllImages, createImage, deleteImage,
   listConstructionTasks, createConstructionTask, updateConstructionTask, deleteConstructionTask,
+  // Suprimentos e Checklist
+  getSupplyCategories, getSupplyItemsByCategory, searchSupplyCategories, searchSupplyItems,
+  getConstructionSupplyItems, createConstructionSupplyItem, updateConstructionSupplyItem, deleteConstructionSupplyItem,
+  getLastClosedValue,
+  getSupplyFiles, createSupplyFile, deleteSupplyFile,
+  getConstructionChecklist, initializeChecklist, toggleChecklistItem, updateChecklistNotes,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -1045,6 +1051,77 @@ export const appRouter = router({
         } as any);
       }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteConstructionTask(input.id)),
+  }),
+
+  // ─── SUPRIMENTOS E CHECKLIST ──────────────────────────────────────────────
+  supplies2: router({
+    categories: protectedProcedure.query(() => getSupplyCategories()),
+    itemsByCategory: protectedProcedure.input(z.object({ categoryId: z.number() })).query(({ input }) => getSupplyItemsByCategory(input.categoryId)),
+    searchCategories: protectedProcedure.input(z.object({ query: z.string() })).query(({ input }) => searchSupplyCategories(input.query)),
+    searchItems: protectedProcedure.input(z.object({ query: z.string() })).query(({ input }) => searchSupplyItems(input.query)),
+    lastClosedValue: protectedProcedure.input(z.object({ supplyItemId: z.number(), excludeConstructionId: z.number().optional() })).query(({ input }) => getLastClosedValue(input.supplyItemId, input.excludeConstructionId)),
+  }),
+  constructionSupplies: router({
+    list: protectedProcedure.input(z.object({ constructionId: z.number(), categoryId: z.number().optional() })).query(({ input }) => getConstructionSupplyItems(input.constructionId, input.categoryId)),
+    create: protectedProcedure
+      .input(z.object({
+        constructionId: z.number(),
+        categoryId: z.number(),
+        supplyItemId: z.number(),
+        quantity: z.string().optional(),
+        unit: z.string().optional(),
+        closedValue: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createConstructionSupplyItem(input as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        quantity: z.string().optional(),
+        unit: z.string().optional(),
+        closedValue: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...rest } = input;
+        await updateConstructionSupplyItem(id, rest as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteConstructionSupplyItem(input.id)),
+  }),
+  supplyFiles: router({
+    list: protectedProcedure.input(z.object({ constructionId: z.number(), categoryId: z.number().optional() })).query(({ input }) => getSupplyFiles(input.constructionId, input.categoryId)),
+    upload: protectedProcedure
+      .input(z.object({
+        constructionId: z.number(),
+        categoryId: z.number(),
+        fileName: z.string(),
+        fileBase64: z.string(),
+        contentType: z.string().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const buffer = Buffer.from(input.fileBase64, "base64");
+        const key = `supply-files/${input.constructionId}/${input.categoryId}/${nanoid()}-${input.fileName}`;
+        const { url } = await storagePut(key, buffer, input.contentType || "application/pdf");
+        return createSupplyFile({
+          constructionId: input.constructionId,
+          categoryId: input.categoryId,
+          fileName: input.fileName,
+          fileUrl: url,
+          fileKey: key,
+          uploadedBy: ctx.user?.name ?? "Sistema",
+        });
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteSupplyFile(input.id)),
+  }),
+  constructionChecklist: router({
+    get: protectedProcedure.input(z.object({ constructionId: z.number() })).query(({ input }) => getConstructionChecklist(input.constructionId)),
+    initialize: protectedProcedure.input(z.object({ constructionId: z.number() })).mutation(({ input }) => initializeChecklist(input.constructionId)),
+    toggle: protectedProcedure
+      .input(z.object({ id: z.number(), isChecked: z.boolean() }))
+      .mutation(async ({ input, ctx }) => toggleChecklistItem(input.id, input.isChecked, ctx.user?.id)),
+    updateNotes: protectedProcedure
+      .input(z.object({ id: z.number(), notes: z.string() }))
+      .mutation(async ({ input }) => updateChecklistNotes(input.id, input.notes)),
   }),
 });
 export type AppRouter = typeof appRouter;

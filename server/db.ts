@@ -1,4 +1,4 @@
-import { eq, desc, asc, and, lte, gte, sql } from "drizzle-orm";
+import { eq, desc, asc, and, lte, gte, sql, like, isNotNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import {
   InsertUser, users, UserRole,
@@ -17,6 +17,11 @@ import {
   constructionReports, InsertConstructionReport,
   constructionImages, InsertConstructionImage,
   constructionTasks, InsertConstructionTask,
+  // Suprimentos e Checklist
+  supplyCategories, supplyItems,
+  constructionSupplyItems, InsertConstructionSupplyItem,
+  supplyFiles, InsertSupplyFile,
+  constructionChecklist, InsertConstructionChecklistItem,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1060,4 +1065,172 @@ export async function deleteConstructionTask(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.delete(constructionTasks).where(eq(constructionTasks.id, id));
+}
+
+// ─── SUPRIMENTOS E CHECKLIST ────────────────────────────────────────────────
+
+// Categorias e itens base
+export async function getSupplyCategories() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supplyCategories).orderBy(supplyCategories.code);
+}
+
+export async function getSupplyItemsByCategory(categoryId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supplyItems).where(eq(supplyItems.categoryId, categoryId)).orderBy(supplyItems.name);
+}
+
+export async function searchSupplyCategories(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supplyCategories).where(like(supplyCategories.name, `%${query}%`)).orderBy(supplyCategories.code);
+}
+
+export async function searchSupplyItems(query: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const results = await db.select({
+    item: supplyItems,
+    category: supplyCategories,
+  }).from(supplyItems)
+    .innerJoin(supplyCategories, eq(supplyItems.categoryId, supplyCategories.id))
+    .where(like(supplyItems.name, `%${query}%`))
+    .orderBy(supplyItems.name)
+    .limit(20);
+  return results;
+}
+
+// Itens de obra (vínculo item + obra)
+export async function getConstructionSupplyItems(constructionId: number, categoryId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(constructionSupplyItems.constructionId, constructionId)];
+  if (categoryId) conditions.push(eq(constructionSupplyItems.categoryId, categoryId));
+  return db.select().from(constructionSupplyItems).where(and(...conditions)).orderBy(constructionSupplyItems.createdAt);
+}
+
+export async function createConstructionSupplyItem(data: InsertConstructionSupplyItem) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(constructionSupplyItems).values(data).$returningId();
+  return result;
+}
+
+export async function updateConstructionSupplyItem(id: number, data: Partial<InsertConstructionSupplyItem>) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(constructionSupplyItems).set(data).where(eq(constructionSupplyItems.id, id));
+}
+
+export async function deleteConstructionSupplyItem(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(constructionSupplyItems).where(eq(constructionSupplyItems.id, id));
+}
+
+// Histórico de preços — último valor fechado para um item em qualquer obra
+export async function getLastClosedValue(supplyItemId: number, excludeConstructionId?: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const conditions = [eq(constructionSupplyItems.supplyItemId, supplyItemId)];
+  if (excludeConstructionId) {
+    conditions.push(sql`${constructionSupplyItems.constructionId} != ${excludeConstructionId}`);
+  }
+  const results = await db.select({
+    closedValue: constructionSupplyItems.closedValue,
+    constructionId: constructionSupplyItems.constructionId,
+    unit: constructionSupplyItems.unit,
+  }).from(constructionSupplyItems)
+    .where(and(...conditions, isNotNull(constructionSupplyItems.closedValue)))
+    .orderBy(desc(constructionSupplyItems.createdAt))
+    .limit(1);
+  
+  if (results.length === 0) return null;
+  
+  // Get construction title
+  const construction = await db.select({ title: constructions.title })
+    .from(constructions)
+    .where(eq(constructions.id, results[0].constructionId))
+    .limit(1);
+  
+  return {
+    value: results[0].closedValue,
+    unit: results[0].unit,
+    constructionTitle: construction[0]?.title ?? "Obra anterior",
+  };
+}
+
+// Arquivos de orçamento
+export async function getSupplyFiles(constructionId: number, categoryId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [eq(supplyFiles.constructionId, constructionId)];
+  if (categoryId) conditions.push(eq(supplyFiles.categoryId, categoryId));
+  return db.select().from(supplyFiles).where(and(...conditions)).orderBy(desc(supplyFiles.uploadedAt));
+}
+
+export async function createSupplyFile(data: InsertSupplyFile) {
+  const db = await getDb();
+  if (!db) return null;
+  const [result] = await db.insert(supplyFiles).values(data).$returningId();
+  return result;
+}
+
+export async function deleteSupplyFile(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(supplyFiles).where(eq(supplyFiles.id, id));
+}
+
+// Checklist de ação da obra
+export async function getConstructionChecklist(constructionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(constructionChecklist).where(eq(constructionChecklist.constructionId, constructionId));
+}
+
+export async function initializeChecklist(constructionId: number) {
+  const db = await getDb();
+  if (!db) return;
+  
+  // Check if already initialized
+  const existing = await db.select({ id: constructionChecklist.id })
+    .from(constructionChecklist)
+    .where(eq(constructionChecklist.constructionId, constructionId))
+    .limit(1);
+  
+  if (existing.length > 0) return; // Already initialized
+  
+  // Get all items
+  const allItems = await db.select().from(supplyItems);
+  
+  // Create checklist entries for all items
+  const entries = allItems.map(item => ({
+    constructionId,
+    categoryId: item.categoryId,
+    supplyItemId: item.id,
+    isChecked: false,
+  }));
+  
+  if (entries.length > 0) {
+    await db.insert(constructionChecklist).values(entries);
+  }
+}
+
+export async function toggleChecklistItem(id: number, isChecked: boolean, checkedBy?: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(constructionChecklist).set({
+    isChecked,
+    checkedBy: isChecked ? checkedBy : null,
+    checkedAt: isChecked ? new Date() : null,
+  }).where(eq(constructionChecklist.id, id));
+}
+
+export async function updateChecklistNotes(id: number, notes: string) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(constructionChecklist).set({ notes }).where(eq(constructionChecklist.id, id));
 }

@@ -526,3 +526,75 @@ export const constructionTasks = mysqlTable("construction_tasks", {
 
 export type ConstructionTask = typeof constructionTasks.$inferSelect;
 export type InsertConstructionTask = typeof constructionTasks.$inferInsert;
+
+// ─── SUPRIMENTOS E CHECKLIST DE OBRAS ──────────────────────────────────────
+
+// 1. Categorias de Suprimentos (base fixa populada via seed)
+export const supplyCategories = mysqlTable("supply_categories", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("scCode", { length: 10 }).notNull(),
+  name: varchar("scName", { length: 255 }).notNull(),
+  createdAt: timestamp("scCreatedAt").defaultNow().notNull(),
+});
+
+export type SupplyCategory = typeof supplyCategories.$inferSelect;
+export type InsertSupplyCategory = typeof supplyCategories.$inferInsert;
+
+// 2. Itens de Suprimento (itens dentro de cada categoria)
+export const supplyItems = mysqlTable("supply_items", {
+  id: int("id").autoincrement().primaryKey(),
+  categoryId: int("siCategoryId").notNull(),
+  name: varchar("siName", { length: 255 }).notNull(),
+  createdAt: timestamp("siCreatedAt").defaultNow().notNull(),
+});
+
+export type SupplyItem = typeof supplyItems.$inferSelect;
+export type InsertSupplyItem = typeof supplyItems.$inferInsert;
+
+// 3. Itens de Obra (vínculo item + obra + quantidade + valor fechado)
+export const constructionSupplyItems = mysqlTable("construction_supply_items", {
+  id: int("id").autoincrement().primaryKey(),
+  constructionId: int("csiConstructionId").notNull(),
+  categoryId: int("csiCategoryId").notNull(),
+  supplyItemId: int("csiSupplyItemId").notNull(),
+  quantity: decimal("csiQuantity", { precision: 12, scale: 2 }),
+  unit: varchar("csiUnit", { length: 20 }).default("un"),
+  closedValue: decimal("csiClosedValue", { precision: 14, scale: 2 }),
+  notes: text("csiNotes"),
+  createdAt: timestamp("csiCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("csiUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ConstructionSupplyItem = typeof constructionSupplyItems.$inferSelect;
+export type InsertConstructionSupplyItem = typeof constructionSupplyItems.$inferInsert;
+
+// 4. Arquivos de Orçamento (PDFs vinculados à obra + categoria)
+export const supplyFiles = mysqlTable("supply_files", {
+  id: int("id").autoincrement().primaryKey(),
+  constructionId: int("sfConstructionId").notNull(),
+  categoryId: int("sfCategoryId").notNull(),
+  fileName: varchar("sfFileName", { length: 255 }).notNull(),
+  fileUrl: text("sfFileUrl").notNull(),
+  fileKey: varchar("sfFileKey", { length: 512 }),
+  uploadedBy: varchar("sfUploadedBy", { length: 255 }),
+  uploadedAt: timestamp("sfUploadedAt").defaultNow().notNull(),
+});
+
+export type SupplyFile = typeof supplyFiles.$inferSelect;
+export type InsertSupplyFile = typeof supplyFiles.$inferInsert;
+
+// 5. Checklist de Ação da Obra (mesmo item base, marcado por obra)
+export const constructionChecklist = mysqlTable("construction_checklist", {
+  id: int("id").autoincrement().primaryKey(),
+  constructionId: int("clConstructionId").notNull(),
+  categoryId: int("clCategoryId").notNull(),
+  supplyItemId: int("clSupplyItemId").notNull(),
+  isChecked: boolean("clIsChecked").default(false),
+  checkedBy: int("clCheckedBy"),
+  checkedAt: timestamp("clCheckedAt"),
+  notes: text("clNotes"),
+  createdAt: timestamp("clCreatedAt").defaultNow().notNull(),
+});
+
+export type ConstructionChecklistItem = typeof constructionChecklist.$inferSelect;
+export type InsertConstructionChecklistItem = typeof constructionChecklist.$inferInsert;

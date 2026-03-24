@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Loader2, HardHat, Plus, List, Archive, FileText, Image, Calendar, Wrench, Ruler } from "lucide-react";
+import { Loader2, HardHat, Plus, List, Archive, FileText, Image, Calendar, Wrench, Ruler, Package, ClipboardList } from "lucide-react";
 import NovaObraPage from "./NovaObraPage";
 import ObrasListPage from "./ObrasListPage";
 import NovoRelatorioPage from "./NovoRelatorioPage";
@@ -10,6 +10,8 @@ import AdicionarImagemPage from "./AdicionarImagemPage";
 import CalendarioObrasPage from "./CalendarioObrasPage";
 import EmpreiteirosPage from "./EmpreiteirosPage";
 import ArquitetasPage from "./ArquitetasPage";
+import SuprimentosPage from "./SuprimentosPage";
+import ChecklistObraPage from "./ChecklistObraPage";
 
 type Section =
   | "nova_obra"
@@ -19,12 +21,16 @@ type Section =
   | "adicionar_imagem"
   | "calendario"
   | "empreiteiros"
-  | "arquitetas";
+  | "arquitetas"
+  | "suprimentos"
+  | "checklist";
 
 const navItems: Array<{ id: Section; label: string; icon: any; highlight?: boolean }> = [
   { id: "nova_obra", label: "Nova Obra", icon: Plus, highlight: true },
   { id: "em_andamento", label: "Em Andamento", icon: List },
   { id: "arquivadas", label: "Arquivadas", icon: Archive },
+  { id: "suprimentos", label: "Suprimentos", icon: Package },
+  { id: "checklist", label: "Checklist", icon: ClipboardList },
   { id: "novo_relatorio", label: "Relatório", icon: FileText },
   { id: "adicionar_imagem", label: "Imagens", icon: Image },
   { id: "calendario", label: "Calendário", icon: Calendar },
@@ -56,6 +62,8 @@ export default function ObrasLayout() {
       case "nova_obra": return <NovaObraPage onSuccess={() => setActiveSection("em_andamento")} />;
       case "em_andamento": return <ObrasListPage archived={false} />;
       case "arquivadas": return <ObrasListPage archived={true} />;
+      case "suprimentos": return <SuprimentosPage />;
+      case "checklist": return <ChecklistObraPage />;
       case "novo_relatorio": return <NovoRelatorioPage />;
       case "adicionar_imagem": return <AdicionarImagemPage />;
       case "calendario": return <CalendarioObrasPage />;
@@ -72,7 +80,7 @@ export default function ObrasLayout() {
         <div className="border-b border-border bg-background px-4 pt-4 pb-0">
           <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
             <HardHat className="h-5 w-5" />
-            Gestão de Obras
+            Obras
           </h2>
           {/* Navegação por abas */}
           <nav className="flex gap-0.5 overflow-x-auto pb-0">

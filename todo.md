@@ -208,3 +208,28 @@
 - [x] Renomear "Gestão de Imóveis" → "Imóveis"
 - [x] Renomear "Gestão de Negócios" → "Novas Oportunidades"
 - [x] Remover módulo Suprimentos (sidebar, painel, rotas)
+
+## Suprimentos e Checklist (dentro de Obras)
+
+### Suprimentos
+- [x] Tabela base de categorias (12 categorias com itens)
+- [x] Seed de dados: todas as 12 categorias e itens populados
+- [x] Busca inteligente (Typeahead) por categoria
+- [x] Pastas dinâmicas (Accordion) por categoria dentro da obra
+- [x] Histórico de preços: último valor pago em obras anteriores
+- [x] Campos por item: Quantidade, Unidade (m², un, etc.), Valor Fechado
+- [x] Upload de orçamentos (PDFs/planilhas) por categoria e obra
+- [x] Arquivos salvos no S3 vinculados à categoria e obra
+
+### Checklist de Ação
+- [x] Checklist com todos os 12 grupos de itens
+- [x] Marcar itens como concluídos por obra
+- [x] Progresso visual por categoria
+- [x] Integração com os mesmos itens do Suprimentos
+
+### Testes do Suprimentos e Checklist
+- [x] Testes de estrutura dos routers (supplies2, constructionSupplies, supplyFiles, constructionChecklist)
+- [x] Testes de validação de input (campos obrigatórios)
+- [x] Testes de controle de acesso por role (anônimo bloqueado, operador/gerente permitido)
+- [x] Testes de funcionalidade com DB (12 categorias, itens por categoria, busca)
+- [x] Total: 151 testes passando (6 arquivos)
