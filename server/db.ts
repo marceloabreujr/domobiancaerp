@@ -322,3 +322,305 @@ export async function deleteTicket(id: number) {
   if (!db) throw new Error("DB not available");
   await db.delete(tickets).where(eq(tickets.id, id));
 }
+
+// ─── MÓDULO GESTÃO DE IMÓVEIS ──────────────────────────────────────────────
+
+import {
+  owners, InsertOwner,
+  clients, InsertClient,
+  properties, InsertProperty,
+  rentalContracts, InsertRentalContract,
+  propertyTodos, InsertPropertyTodo,
+  propertyChecklists, InsertPropertyChecklist,
+} from "../drizzle/schema";
+
+// ─── OWNERS (Proprietários) ────────────────────────────────────────────────
+
+export async function listOwners() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(owners).orderBy(asc(owners.name));
+}
+
+export async function getOwner(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(owners).where(eq(owners.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createOwner(data: InsertOwner) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(owners).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateOwner(id: number, data: Partial<InsertOwner>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(owners).set(data).where(eq(owners.id, id));
+}
+
+export async function deleteOwner(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(owners).where(eq(owners.id, id));
+}
+
+// ─── CLIENTS (Clientes / Inquilinos) ──────────────────────────────────────
+
+export async function listClients() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(clients).orderBy(asc(clients.name));
+}
+
+export async function getClient(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(clients).where(eq(clients.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createClient(data: InsertClient) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(clients).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateClient(id: number, data: Partial<InsertClient>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(clients).set(data).where(eq(clients.id, id));
+}
+
+export async function deleteClient(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(clients).where(eq(clients.id, id));
+}
+
+// ─── PROPERTIES (Imóveis) ─────────────────────────────────────────────────
+
+export async function listProperties(filters?: { status?: string; ownership?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (filters?.status) conditions.push(eq(properties.status, filters.status as any));
+  if (filters?.ownership) conditions.push(eq(properties.ownership, filters.ownership as any));
+  if (conditions.length > 0) {
+    return db.select().from(properties).where(and(...conditions)).orderBy(desc(properties.createdAt));
+  }
+  return db.select().from(properties).orderBy(desc(properties.createdAt));
+}
+
+export async function getProperty(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(properties).where(eq(properties.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createProperty(data: InsertProperty) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(properties).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateProperty(id: number, data: Partial<InsertProperty>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(properties).set(data).where(eq(properties.id, id));
+}
+
+export async function deleteProperty(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(properties).where(eq(properties.id, id));
+}
+
+export async function getPropertyStats() {
+  const db = await getDb();
+  if (!db) return { total: 0, disponivel: 0, alugado: 0, a_venda: 0, arquivado: 0 };
+  const result = await db.select({
+    status: properties.status,
+    count: sql<number>`COUNT(*)`,
+  }).from(properties).groupBy(properties.status);
+  const stats: Record<string, number> = { total: 0, disponivel: 0, alugado: 0, a_venda: 0, vendido: 0, arquivado: 0 };
+  for (const row of result) {
+    stats[row.status] = Number(row.count);
+    stats.total += Number(row.count);
+  }
+  return stats;
+}
+
+// ─── RENTAL CONTRACTS (Contratos de Locação) ──────────────────────────────
+
+export async function listRentalContracts(propertyId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (propertyId) return db.select().from(rentalContracts).where(eq(rentalContracts.propertyId, propertyId)).orderBy(desc(rentalContracts.startDate));
+  return db.select().from(rentalContracts).orderBy(desc(rentalContracts.startDate));
+}
+
+export async function getRentalContract(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(rentalContracts).where(eq(rentalContracts.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createRentalContract(data: InsertRentalContract) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(rentalContracts).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateRentalContract(id: number, data: Partial<InsertRentalContract>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(rentalContracts).set(data).where(eq(rentalContracts.id, id));
+}
+
+export async function deleteRentalContract(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(rentalContracts).where(eq(rentalContracts.id, id));
+}
+
+export async function getUpcomingRentAlerts(daysAhead: number = 7) {
+  const db = await getDb();
+  if (!db) return [];
+  // Get active contracts and calculate next billing date
+  const activeContracts = await db.select().from(rentalContracts).where(eq(rentalContracts.status, "ativo"));
+  const today = new Date();
+  const alerts: Array<{ contractId: number; propertyId: number; tenantId: number; billingDay: number; rentAmount: string; daysUntilDue: number; type: string }> = [];
+
+  for (const contract of activeContracts) {
+    const billingDay = contract.billingDay || 10;
+    // Calculate next billing date
+    let nextBilling = new Date(today.getFullYear(), today.getMonth(), billingDay);
+    if (nextBilling <= today) nextBilling.setMonth(nextBilling.getMonth() + 1);
+    const diffDays = Math.ceil((nextBilling.getTime() - today.getTime()) / 86400000);
+
+    if (diffDays <= daysAhead) {
+      alerts.push({
+        contractId: contract.id,
+        propertyId: contract.propertyId,
+        tenantId: contract.tenantId,
+        billingDay,
+        rentAmount: contract.rentAmount,
+        daysUntilDue: diffDays,
+        type: "vencimento_aluguel",
+      });
+    }
+
+    // Check contract anniversary (reajuste)
+    if (contract.startDate) {
+      const start = new Date(contract.startDate);
+      let nextAnniversary = new Date(start);
+      while (nextAnniversary <= today) nextAnniversary.setFullYear(nextAnniversary.getFullYear() + 1);
+      const diffAnniversary = Math.ceil((nextAnniversary.getTime() - today.getTime()) / 86400000);
+      if (diffAnniversary <= daysAhead) {
+        alerts.push({
+          contractId: contract.id,
+          propertyId: contract.propertyId,
+          tenantId: contract.tenantId,
+          billingDay,
+          rentAmount: contract.rentAmount,
+          daysUntilDue: diffAnniversary,
+          type: "reajuste_contrato",
+        });
+      }
+    }
+  }
+  return alerts;
+}
+
+// Resumo financeiro de imóveis
+export async function getPropertyFinancialSummary() {
+  const db = await getDb();
+  if (!db) return { totalRentIncome: 0, totalCondoIncome: 0, totalAdminFees: 0, activeContracts: 0 };
+  const active = await db.select().from(rentalContracts).where(eq(rentalContracts.status, "ativo"));
+  const allProps = await db.select().from(properties);
+
+  let totalRentIncome = 0;
+  let totalCondoIncome = 0;
+  let totalAdminFees = 0;
+
+  for (const c of active) {
+    totalRentIncome += parseFloat(c.rentAmount || "0");
+    if (c.condoIncluded) {
+      const prop = allProps.find(p => p.id === c.propertyId);
+      if (prop) totalCondoIncome += parseFloat(prop.condoFee as string || "0");
+    }
+    // Admin fee for third-party properties
+    const prop = allProps.find(p => p.id === c.propertyId);
+    if (prop && prop.ownership === "terceiros" && prop.adminFeePercent) {
+      totalAdminFees += parseFloat(c.rentAmount || "0") * parseFloat(prop.adminFeePercent as string || "0") / 100;
+    }
+  }
+
+  return { totalRentIncome, totalCondoIncome, totalAdminFees, activeContracts: active.length };
+}
+
+// ─── PROPERTY TODOS ───────────────────────────────────────────────────────
+
+export async function listPropertyTodos(propertyId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (propertyId) return db.select().from(propertyTodos).where(eq(propertyTodos.propertyId, propertyId)).orderBy(asc(propertyTodos.dueDate));
+  return db.select().from(propertyTodos).orderBy(asc(propertyTodos.dueDate));
+}
+
+export async function createPropertyTodo(data: InsertPropertyTodo) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(propertyTodos).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updatePropertyTodo(id: number, data: Partial<InsertPropertyTodo>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(propertyTodos).set(data).where(eq(propertyTodos.id, id));
+}
+
+export async function deletePropertyTodo(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(propertyTodos).where(eq(propertyTodos.id, id));
+}
+
+// ─── PROPERTY CHECKLISTS ──────────────────────────────────────────────────
+
+export async function listPropertyChecklists(propertyId: number, month: number, year: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(propertyChecklists).where(
+    and(eq(propertyChecklists.propertyId, propertyId), eq(propertyChecklists.month, month), eq(propertyChecklists.year, year))
+  ).orderBy(asc(propertyChecklists.id));
+}
+
+export async function createPropertyChecklist(data: InsertPropertyChecklist) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(propertyChecklists).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updatePropertyChecklist(id: number, data: Partial<InsertPropertyChecklist>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(propertyChecklists).set(data).where(eq(propertyChecklists.id, id));
+}
+
+export async function deletePropertyChecklist(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(propertyChecklists).where(eq(propertyChecklists.id, id));
+}

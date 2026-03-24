@@ -68,3 +68,44 @@
 - [x] Testes de estrutura dos routers (22 testes)
 - [x] Testes de controle de acesso (bloqueio de não-autenticados)
 - [x] Testes de validação de input (campos obrigatórios)
+
+## Módulo Gestão de Imóveis
+
+### Estrutura e Navegação
+- [x] Sidebar interna: Novo Imóvel, Todos, Disponíveis, Alugados, À Venda, Arquivados
+- [x] Sidebar interna: Checklist Mensal, Alertas de Cobrança, Resumo Financeiro
+- [x] Sidebar interna: Clientes, Proprietários
+- [x] Exibição em cards modernos na área principal
+- [x] Filtro Domobianca / Terceiros na listagem
+
+### Cadastro de Imóvel
+- [x] Posse: Domobianca ou Terceiros
+- [x] Tipologia: Residencial, Galpão, Sala Comercial, Apartamento, Lote, etc.
+- [x] Campos: metragem, condomínio, IPTU
+- [x] Campos residenciais: quartos, banheiros, vagas
+- [x] Status: Disponível, Alugado, À Venda, Arquivado
+
+### Contratos e Inquilinos
+- [x] Cadastro de inquilino (responsável financeiro)
+- [x] Identificação do morador/ocupante (se diferente)
+- [x] Data de início e prazo de locação (Mensal a 3 anos)
+- [x] Índice de reajuste (IGPM, IPCA, INPC)
+- [x] Composição de cobrança (Aluguel+Condomínio+IPTU, checkboxes)
+- [x] Pacote de Locação com valor total
+- [x] Taxa de administração e comissão de venda
+
+### Alertas e Calendário
+- [x] Alerta 7 dias antes do vencimento do aluguel (emissão de boleto)
+- [x] Alerta de aniversário de contrato (reajuste)
+- [x] To-Do List integrada ao módulo
+
+### Clientes e Proprietários
+- [x] Cadastro de clientes (inquilinos/compradores)
+- [x] Cadastro de proprietários (com dados bancários/PIX)
+- [x] Resumo financeiro (receita aluguéis, condomínios, taxas admin, contratos ativos)
+- [x] Checklist mensal de manutenção por imóvel
+
+### Testes do Módulo Gestão de Imóveis
+- [x] Testes de estrutura dos routers (32 testes)
+- [x] Testes de validação de input (campos obrigatórios)
+- [x] Total: 63 testes passando (3 arquivos)

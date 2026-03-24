@@ -12,6 +12,12 @@ import {
   listFleet, createFleetVehicle, updateFleetVehicle, deleteFleetVehicle,
   listPettyCash, createPettyCashEntry, deletePettyCashEntry, getPettyCashBalance,
   listTickets, createTicket, updateTicket, deleteTicket,
+  listOwners, getOwner, createOwner, updateOwner, deleteOwner,
+  listClients, getClient, createClient, updateClient, deleteClient,
+  listProperties, getProperty, createProperty, updateProperty, deleteProperty, getPropertyStats,
+  listRentalContracts, getRentalContract, createRentalContract, updateRentalContract, deleteRentalContract, getUpcomingRentAlerts, getPropertyFinancialSummary,
+  listPropertyTodos, createPropertyTodo, updatePropertyTodo, deletePropertyTodo,
+  listPropertyChecklists, createPropertyChecklist, updatePropertyChecklist, deletePropertyChecklist,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -295,6 +301,264 @@ export const appRouter = router({
         return { success: true } as const;
       }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteTicket(input.id); return { success: true } as const; }),
+  }),
+
+  // ─── MÓDULO GESTÃO DE IMÓVEIS ──────────────────────────────────────────
+
+  owners: router({
+    list: protectedProcedure.query(async () => listOwners()),
+    get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getOwner(input.id)),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        cpfCnpj: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        phone2: z.string().optional(),
+        address: z.string().optional(),
+        bankName: z.string().optional(),
+        bankAgency: z.string().optional(),
+        bankAccount: z.string().optional(),
+        pixKey: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createOwner(input)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        cpfCnpj: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        phone2: z.string().optional(),
+        address: z.string().optional(),
+        bankName: z.string().optional(),
+        bankAgency: z.string().optional(),
+        bankAccount: z.string().optional(),
+        pixKey: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => { const { id, ...data } = input; await updateOwner(id, data); return { success: true } as const; }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteOwner(input.id); return { success: true } as const; }),
+  }),
+
+  clients: router({
+    list: protectedProcedure.query(async () => listClients()),
+    get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getClient(input.id)),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        cpfCnpj: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        phone2: z.string().optional(),
+        address: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createClient(input)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        cpfCnpj: z.string().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        phone2: z.string().optional(),
+        address: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => { const { id, ...data } = input; await updateClient(id, data); return { success: true } as const; }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteClient(input.id); return { success: true } as const; }),
+  }),
+
+  properties: router({
+    list: protectedProcedure
+      .input(z.object({ status: z.string().optional(), ownership: z.string().optional() }).optional())
+      .query(async ({ input }) => listProperties(input ?? undefined)),
+    get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getProperty(input.id)),
+    stats: protectedProcedure.query(async () => getPropertyStats()),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        code: z.string().optional(),
+        ownership: z.enum(["domobianca", "terceiros"]).optional(),
+        propertyType: z.enum(["residencial", "apartamento", "galpao", "sala_comercial", "lote", "casa", "cobertura", "kitnet", "outro"]).optional(),
+        status: z.enum(["disponivel", "alugado", "a_venda", "vendido", "arquivado"]).optional(),
+        ownerId: z.number().optional(),
+        street: z.string().optional(),
+        number: z.string().optional(),
+        complement: z.string().optional(),
+        neighborhood: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        zipCode: z.string().optional(),
+        area: z.string().optional(),
+        bedrooms: z.number().optional(),
+        bathrooms: z.number().optional(),
+        parkingSpots: z.number().optional(),
+        suites: z.number().optional(),
+        rentValue: z.string().optional(),
+        saleValue: z.string().optional(),
+        condoFee: z.string().optional(),
+        iptuValue: z.string().optional(),
+        adminFeePercent: z.string().optional(),
+        saleCommissionPercent: z.string().optional(),
+        description: z.string().optional(),
+        features: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createProperty(input as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).optional(),
+        code: z.string().optional(),
+        ownership: z.enum(["domobianca", "terceiros"]).optional(),
+        propertyType: z.enum(["residencial", "apartamento", "galpao", "sala_comercial", "lote", "casa", "cobertura", "kitnet", "outro"]).optional(),
+        status: z.enum(["disponivel", "alugado", "a_venda", "vendido", "arquivado"]).optional(),
+        ownerId: z.number().optional(),
+        street: z.string().optional(),
+        number: z.string().optional(),
+        complement: z.string().optional(),
+        neighborhood: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        zipCode: z.string().optional(),
+        area: z.string().optional(),
+        bedrooms: z.number().optional(),
+        bathrooms: z.number().optional(),
+        parkingSpots: z.number().optional(),
+        suites: z.number().optional(),
+        rentValue: z.string().optional(),
+        saleValue: z.string().optional(),
+        condoFee: z.string().optional(),
+        iptuValue: z.string().optional(),
+        adminFeePercent: z.string().optional(),
+        saleCommissionPercent: z.string().optional(),
+        description: z.string().optional(),
+        features: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => { const { id, ...data } = input; await updateProperty(id, data as any); return { success: true } as const; }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteProperty(input.id); return { success: true } as const; }),
+  }),
+
+  rentalContracts: router({
+    list: protectedProcedure
+      .input(z.object({ propertyId: z.number().optional() }).optional())
+      .query(async ({ input }) => listRentalContracts(input?.propertyId)),
+    get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getRentalContract(input.id)),
+    alerts: protectedProcedure.input(z.object({ days: z.number().optional() }).optional()).query(async ({ input }) => getUpcomingRentAlerts(input?.days ?? 7)),
+    financialSummary: protectedProcedure.query(async () => getPropertyFinancialSummary()),
+    create: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        tenantId: z.number(),
+        occupantName: z.string().optional(),
+        occupantCpf: z.string().optional(),
+        startDate: z.string(),
+        endDate: z.string().optional(),
+        leaseTerm: z.enum(["mensal", "trimestral", "semestral", "anual", "2_anos", "3_anos"]).optional(),
+        rentAmount: z.string(),
+        condoIncluded: z.boolean().optional(),
+        iptuIncluded: z.boolean().optional(),
+        isPackage: z.boolean().optional(),
+        packageTotal: z.string().optional(),
+        adjustmentIndex: z.enum(["igpm", "ipca", "inpc", "nenhum"]).optional(),
+        billingDay: z.number().optional(),
+        lateFeePercent: z.string().optional(),
+        dailyInterestPercent: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return createRentalContract({
+          ...input,
+          startDate: new Date(input.startDate),
+          endDate: input.endDate ? new Date(input.endDate) : undefined,
+        } as any);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        occupantName: z.string().optional(),
+        occupantCpf: z.string().optional(),
+        endDate: z.string().optional(),
+        rentAmount: z.string().optional(),
+        condoIncluded: z.boolean().optional(),
+        iptuIncluded: z.boolean().optional(),
+        isPackage: z.boolean().optional(),
+        packageTotal: z.string().optional(),
+        adjustmentIndex: z.enum(["igpm", "ipca", "inpc", "nenhum"]).optional(),
+        billingDay: z.number().optional(),
+        lateFeePercent: z.string().optional(),
+        dailyInterestPercent: z.string().optional(),
+        status: z.enum(["ativo", "encerrado", "pendente", "rescindido"]).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, endDate, ...rest } = input;
+        await updateRentalContract(id, {
+          ...rest,
+          ...(endDate !== undefined ? { endDate: new Date(endDate) } : {}),
+        } as any);
+        return { success: true } as const;
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteRentalContract(input.id); return { success: true } as const; }),
+  }),
+
+  propertyTodos: router({
+    list: protectedProcedure
+      .input(z.object({ propertyId: z.number().optional() }).optional())
+      .query(async ({ input }) => listPropertyTodos(input?.propertyId)),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        description: z.string().optional(),
+        propertyId: z.number().optional(),
+        dueDate: z.string().optional(),
+        priority: z.enum(["baixa", "media", "alta"]).optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        return createPropertyTodo({
+          ...input,
+          dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
+          createdBy: ctx.user.id,
+        } as any);
+      }),
+    update: protectedProcedure
+      .input(z.object({ id: z.number(), title: z.string().optional(), description: z.string().optional(), dueDate: z.string().optional(), priority: z.enum(["baixa", "media", "alta"]).optional(), isCompleted: z.boolean().optional() }))
+      .mutation(async ({ input }) => {
+        const { id, dueDate, ...rest } = input;
+        await updatePropertyTodo(id, {
+          ...rest,
+          ...(dueDate !== undefined ? { dueDate: new Date(dueDate) } : {}),
+        } as any);
+        return { success: true } as const;
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deletePropertyTodo(input.id); return { success: true } as const; }),
+  }),
+
+  propertyChecklists: router({
+    list: protectedProcedure
+      .input(z.object({ propertyId: z.number(), month: z.number(), year: z.number() }))
+      .query(async ({ input }) => listPropertyChecklists(input.propertyId, input.month, input.year)),
+    create: protectedProcedure
+      .input(z.object({
+        propertyId: z.number(),
+        month: z.number(),
+        year: z.number(),
+        item: z.string().min(1),
+      }))
+      .mutation(async ({ input }) => createPropertyChecklist(input)),
+    update: protectedProcedure
+      .input(z.object({ id: z.number(), isChecked: z.boolean().optional(), notes: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        const { id, ...data } = input;
+        await updatePropertyChecklist(id, {
+          ...data,
+          ...(data.isChecked ? { checkedBy: ctx.user.id, checkedAt: new Date() } : {}),
+        } as any);
+        return { success: true } as const;
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deletePropertyChecklist(input.id); return { success: true } as const; }),
   }),
 
   // ─── IA INTEGRADA ─────────────────────────────────────────────────────────

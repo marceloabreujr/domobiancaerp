@@ -8,7 +8,7 @@ import Home from "./pages/Home";
 import Financeiro from "./pages/Financeiro";
 import AdminLayout from "./pages/admin/AdminLayout";
 import Obras from "./pages/Obras";
-import Imoveis from "./pages/Imoveis";
+import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
 import Suprimentos from "./pages/Suprimentos";
 import Negocios from "./pages/Negocios";
 import Configuracoes from "./pages/Configuracoes";
@@ -20,7 +20,7 @@ function Router() {
       <Route path="/financeiro" component={Financeiro} />
       <Route path="/administrativo" component={AdminLayout} />
       <Route path="/obras" component={Obras} />
-      <Route path="/imoveis" component={Imoveis} />
+      <Route path="/imoveis" component={ImoveisLayout} />
       <Route path="/suprimentos" component={Suprimentos} />
       <Route path="/negocios" component={Negocios} />
       <Route path="/configuracoes" component={Configuracoes} />

@@ -161,3 +161,152 @@ export const tickets = mysqlTable("tickets", {
 
 export type Ticket = typeof tickets.$inferSelect;
 export type InsertTicket = typeof tickets.$inferInsert;
+
+// ─── MÓDULO GESTÃO DE IMÓVEIS ──────────────────────────────────────────────
+
+// 1. Proprietários
+export const owners = mysqlTable("owners", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  cpfCnpj: varchar("cpfCnpj", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  phone2: varchar("phone2", { length: 20 }),
+  address: text("address"),
+  bankName: varchar("bankName", { length: 128 }),
+  bankAgency: varchar("bankAgency", { length: 20 }),
+  bankAccount: varchar("bankAccount", { length: 30 }),
+  pixKey: varchar("pixKey", { length: 255 }),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Owner = typeof owners.$inferSelect;
+export type InsertOwner = typeof owners.$inferInsert;
+
+// 2. Clientes (inquilinos / compradores)
+export const clients = mysqlTable("clients", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  cpfCnpj: varchar("cpfCnpj", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  phone: varchar("phone", { length: 20 }),
+  phone2: varchar("phone2", { length: 20 }),
+  address: text("address"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Client = typeof clients.$inferSelect;
+export type InsertClient = typeof clients.$inferInsert;
+
+// 3. Imóveis
+export const properties = mysqlTable("properties", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 20 }),
+  title: varchar("title", { length: 255 }).notNull(),
+  ownership: mysqlEnum("ownership", ["domobianca", "terceiros"]).default("domobianca").notNull(),
+  propertyType: mysqlEnum("propertyType", ["residencial", "apartamento", "galpao", "sala_comercial", "lote", "casa", "cobertura", "kitnet", "outro"]).default("residencial").notNull(),
+  status: mysqlEnum("status", ["disponivel", "alugado", "a_venda", "vendido", "arquivado"]).default("disponivel").notNull(),
+  ownerId: int("ownerId"),
+  // Endereço
+  street: varchar("street", { length: 255 }),
+  number: varchar("number", { length: 20 }),
+  complement: varchar("complement", { length: 128 }),
+  neighborhood: varchar("neighborhood", { length: 128 }),
+  city: varchar("city", { length: 128 }),
+  state: varchar("state", { length: 2 }),
+  zipCode: varchar("zipCode", { length: 10 }),
+  // Características
+  area: decimal("area", { precision: 10, scale: 2 }),
+  bedrooms: int("bedrooms"),
+  bathrooms: int("bathrooms"),
+  parkingSpots: int("parkingSpots"),
+  suites: int("suites"),
+  // Valores
+  rentValue: decimal("rentValue", { precision: 12, scale: 2 }),
+  saleValue: decimal("saleValue", { precision: 14, scale: 2 }),
+  condoFee: decimal("condoFee", { precision: 10, scale: 2 }),
+  iptuValue: decimal("iptuValue", { precision: 10, scale: 2 }),
+  // Administração (para imóveis de terceiros)
+  adminFeePercent: decimal("adminFeePercent", { precision: 5, scale: 2 }),
+  saleCommissionPercent: decimal("saleCommissionPercent", { precision: 5, scale: 2 }),
+  // Extras
+  description: text("description"),
+  features: text("features"),
+  imageUrl: text("imageUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Property = typeof properties.$inferSelect;
+export type InsertProperty = typeof properties.$inferInsert;
+
+// 4. Contratos de Locação
+export const rentalContracts = mysqlTable("rental_contracts", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  tenantId: int("tenantId").notNull(),
+  occupantName: varchar("occupantName", { length: 255 }),
+  occupantCpf: varchar("occupantCpf", { length: 14 }),
+  // Datas
+  startDate: date("startDate").notNull(),
+  endDate: date("endDate"),
+  leaseTerm: mysqlEnum("leaseTerm", ["mensal", "trimestral", "semestral", "anual", "2_anos", "3_anos"]).default("anual").notNull(),
+  // Valores
+  rentAmount: decimal("rentAmount", { precision: 12, scale: 2 }).notNull(),
+  condoIncluded: boolean("condoIncluded").default(false),
+  iptuIncluded: boolean("iptuIncluded").default(false),
+  isPackage: boolean("isPackage").default(false),
+  packageTotal: decimal("packageTotal", { precision: 12, scale: 2 }),
+  // Reajuste
+  adjustmentIndex: mysqlEnum("adjustmentIndex", ["igpm", "ipca", "inpc", "nenhum"]).default("igpm").notNull(),
+  // Cobrança
+  billingDay: int("billingDay").default(10),
+  lateFeePercent: decimal("lateFeePercent", { precision: 5, scale: 2 }).default("2.00"),
+  dailyInterestPercent: decimal("dailyInterestPercent", { precision: 5, scale: 4 }).default("0.0333"),
+  // Status
+  status: mysqlEnum("contractStatus", ["ativo", "encerrado", "pendente", "rescindido"]).default("ativo").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RentalContract = typeof rentalContracts.$inferSelect;
+export type InsertRentalContract = typeof rentalContracts.$inferInsert;
+
+// 5. To-Do List do módulo de imóveis
+export const propertyTodos = mysqlTable("property_todos", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  propertyId: int("propertyId"),
+  dueDate: date("dueDate"),
+  priority: mysqlEnum("priority", ["baixa", "media", "alta"]).default("media").notNull(),
+  isCompleted: boolean("isCompleted").default(false),
+  createdBy: int("createdBy"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PropertyTodo = typeof propertyTodos.$inferSelect;
+export type InsertPropertyTodo = typeof propertyTodos.$inferInsert;
+
+// 6. Checklist Mensal de Imóveis
+export const propertyChecklists = mysqlTable("property_checklists", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").notNull(),
+  month: int("month").notNull(),
+  year: int("year").notNull(),
+  item: varchar("item", { length: 255 }).notNull(),
+  isChecked: boolean("isChecked").default(false),
+  notes: text("notes"),
+  checkedBy: int("checkedBy"),
+  checkedAt: timestamp("checkedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PropertyChecklist = typeof propertyChecklists.$inferSelect;
+export type InsertPropertyChecklist = typeof propertyChecklists.$inferInsert;
