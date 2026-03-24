@@ -269,6 +269,10 @@ export const rentalContracts = mysqlTable("rental_contracts", {
   billingDay: int("billingDay").default(10),
   lateFeePercent: decimal("lateFeePercent", { precision: 5, scale: 2 }).default("2.00"),
   dailyInterestPercent: decimal("dailyInterestPercent", { precision: 5, scale: 4 }).default("0.0333"),
+  // PDF do contrato assinado
+  contractFileUrl: text("contractFileUrl"),
+  contractFileKey: varchar("contractFileKey", { length: 512 }),
+  contractFileName: varchar("contractFileName", { length: 255 }),
   // Status
   status: mysqlEnum("contractStatus", ["ativo", "encerrado", "pendente", "rescindido"]).default("ativo").notNull(),
   notes: text("notes"),

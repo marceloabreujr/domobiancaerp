@@ -523,6 +523,36 @@ export const appRouter = router({
         return { success: true } as const;
       }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteRentalContract(input.id); return { success: true } as const; }),
+    uploadContract: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        fileData: z.string(),
+        fileName: z.string(),
+        mimeType: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import("./storage");
+        const buffer = Buffer.from(input.fileData, "base64");
+        const suffix = Math.random().toString(36).substring(2, 8);
+        const fileKey = `contracts/${input.id}-${suffix}-${input.fileName}`;
+        const { url } = await storagePut(fileKey, buffer, input.mimeType);
+        await updateRentalContract(input.id, {
+          contractFileUrl: url,
+          contractFileKey: fileKey,
+          contractFileName: input.fileName,
+        } as any);
+        return { success: true, url, fileName: input.fileName } as const;
+      }),
+    removeContractFile: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await updateRentalContract(input.id, {
+          contractFileUrl: null,
+          contractFileKey: null,
+          contractFileName: null,
+        } as any);
+        return { success: true } as const;
+      }),
   }),
 
   propertyTodos: router({

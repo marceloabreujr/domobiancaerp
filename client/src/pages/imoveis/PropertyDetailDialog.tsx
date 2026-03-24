@@ -1,13 +1,105 @@
 import { trpc } from "@/lib/trpc";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, MapPin, BedDouble, Bath, Car, Ruler, FileText, Plus } from "lucide-react";
-import { useState } from "react";
+import { Loader2, MapPin, BedDouble, Bath, Car, FileText, Plus, Upload, Download, Trash2, File } from "lucide-react";
+import { useState, useRef } from "react";
+import { toast } from "sonner";
 import NovoContratoForm from "./NovoContratoForm";
 
 const statusLabels: Record<string, string> = { disponivel_locacao: "Disponível Locação", disponivel_venda: "Disponível Venda", alugado: "Alugado", vendido: "Vendido", arquivado: "Arquivado" };
 const typeLabels: Record<string, string> = { residencial: "Residencial", apartamento: "Apartamento", galpao: "Galpão", sala_comercial: "Sala Comercial", lote: "Lote", casa: "Casa", cobertura: "Cobertura", kitnet: "Kitnet", outro: "Outro" };
 const leaseLabels: Record<string, string> = { quinzenal: "Quinzenal", mensal: "Mensal", trimestral: "Trimestral", semestral: "Semestral", anual: "Anual", "2_anos": "2 Anos", "3_anos": "3 Anos" };
+
+function ContractPdfSection({ contract }: { contract: any }) {
+  const utils = trpc.useUtils();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const uploadMutation = trpc.rentalContracts.uploadContract.useMutation({
+    onSuccess: () => {
+      toast.success("Contrato PDF anexado com sucesso!");
+      utils.rentalContracts.list.invalidate();
+    },
+    onError: (err) => toast.error("Erro ao enviar: " + err.message),
+  });
+
+  const removeMutation = trpc.rentalContracts.removeContractFile.useMutation({
+    onSuccess: () => {
+      toast.success("PDF removido.");
+      utils.rentalContracts.list.invalidate();
+    },
+    onError: (err) => toast.error("Erro ao remover: " + err.message),
+  });
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.type !== "application/pdf") {
+      toast.error("Apenas arquivos PDF são aceitos.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Arquivo muito grande. Máximo 10MB.");
+      return;
+    }
+    setUploading(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(arrayBuffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
+      await uploadMutation.mutateAsync({
+        id: contract.id,
+        fileData: base64,
+        fileName: file.name,
+        mimeType: file.type,
+      });
+    } catch {
+      // error handled by mutation
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  return (
+    <div className="mt-2 pt-2 border-t border-border/50">
+      <input ref={fileInputRef} type="file" accept=".pdf" className="hidden" onChange={handleFileSelect} />
+      {contract.contractFileUrl ? (
+        <div className="flex items-center gap-2 bg-blue-50 rounded-md p-2">
+          <File className="h-4 w-4 text-blue-600 shrink-0" />
+          <span className="text-xs text-blue-700 font-medium truncate flex-1">{contract.contractFileName || "Contrato.pdf"}</span>
+          <a href={contract.contractFileUrl} target="_blank" rel="noopener noreferrer">
+            <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-blue-600 hover:text-blue-800">
+              <Download className="h-3.5 w-3.5" />
+            </Button>
+          </a>
+          <Button
+            size="sm" variant="ghost"
+            className="h-6 w-6 p-0 text-red-500 hover:text-red-700"
+            onClick={() => removeMutation.mutate({ id: contract.id })}
+            disabled={removeMutation.isPending}
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ) : (
+        <Button
+          size="sm" variant="outline"
+          className="h-7 text-xs w-full"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
+          {uploading ? "Enviando..." : "Anexar Contrato Assinado (PDF)"}
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export default function PropertyDetailDialog({ propertyId, open, onClose }: { propertyId: number; open: boolean; onClose: () => void }) {
   const { data: property, isLoading } = trpc.properties.get.useQuery({ id: propertyId });
@@ -96,8 +188,12 @@ export default function PropertyDetailDialog({ propertyId, open, onClose }: { pr
                             <span>Prazo: {leaseLabels[c.leaseTerm] || c.leaseTerm}</span>
                             <span>Início: {c.startDate ? new Date(c.startDate).toLocaleDateString("pt-BR") : "-"}</span>
                             <span>Reajuste: {c.adjustmentIndex?.toUpperCase()}</span>
+                            {c.adjustmentValue && <span>Valor Reajuste: R$ {parseFloat(c.adjustmentValue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
+                            {c.nextAdjustmentDate && <span>Próx. Reajuste: {new Date(c.nextAdjustmentDate).toLocaleDateString("pt-BR")}</span>}
                             {c.isPackage && c.packageTotal && <span className="col-span-2">Pacote: R$ {parseFloat(c.packageTotal).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>}
                           </div>
+                          {/* Seção de PDF do contrato assinado */}
+                          <ContractPdfSection contract={c} />
                         </div>
                       );
                     })}

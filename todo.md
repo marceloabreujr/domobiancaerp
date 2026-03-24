@@ -199,3 +199,6 @@
 - [x] Testes de estrutura dos routers (constructions, contractors, architects, reports, images, tasks)
 - [x] Testes de validação de input (campos obrigatórios)
 - [x] Total: 119 testes passando (5 arquivos)
+
+## Melhorias
+- [x] Upload de PDF do contrato assinado no módulo Gestão de Imóveis (contratos de locação)
