@@ -1,31 +1,102 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import DashboardLayout from "@/components/DashboardLayout";
+import {
+  Briefcase,
+  Building2,
+  ClipboardList,
+  HardHat,
+  Package,
+  Wallet,
+} from "lucide-react";
+import { useLocation } from "wouter";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+const modules = [
+  {
+    icon: Wallet,
+    label: "Financeiro",
+    description: "Contas, fluxo de caixa e DRE",
+    path: "/financeiro",
+    color: "bg-emerald-500/10 text-emerald-600",
+  },
+  {
+    icon: ClipboardList,
+    label: "Administrativo",
+    description: "Documentos, contratos e equipe",
+    path: "/administrativo",
+    color: "bg-blue-500/10 text-blue-600",
+  },
+  {
+    icon: HardHat,
+    label: "Gestão de Obras",
+    description: "Cadastro, tarefas e relatórios",
+    path: "/obras",
+    color: "bg-amber-500/10 text-amber-600",
+  },
+  {
+    icon: Building2,
+    label: "Gestão de Imóveis",
+    description: "Imóveis, contratos e locatários",
+    path: "/imoveis",
+    color: "bg-violet-500/10 text-violet-600",
+  },
+  {
+    icon: Package,
+    label: "Suprimentos",
+    description: "Pedidos, fornecedores e materiais",
+    path: "/suprimentos",
+    color: "bg-orange-500/10 text-orange-600",
+  },
+  {
+    icon: Briefcase,
+    label: "Gestão de Negócios",
+    description: "Pipeline, clientes e captadores",
+    path: "/negocios",
+    color: "bg-pink-500/10 text-pink-600",
+  },
+];
+
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  const firstName = user?.name?.split(" ")[0] ?? "Usuário";
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
+    <DashboardLayout>
+      <div className="max-w-5xl">
+        <div className="mb-8">
+          <h1 className="text-2xl font-semibold text-foreground">
+            Olá, {firstName}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Bem-vindo ao Domobianca ERP. Selecione um módulo para começar.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {modules.map((mod) => (
+            <button
+              key={mod.path}
+              onClick={() => setLocation(mod.path)}
+              className="group flex flex-col items-start gap-3 p-5 rounded-xl border border-border bg-card hover:border-primary/30 hover:shadow-sm transition-all text-left"
+            >
+              <div
+                className={`h-10 w-10 rounded-lg flex items-center justify-center ${mod.color}`}
+              >
+                <mod.icon className="h-5 w-5" />
+              </div>
+              <div>
+                <h3 className="font-medium text-card-foreground group-hover:text-primary transition-colors">
+                  {mod.label}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  {mod.description}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+    </DashboardLayout>
   );
 }
