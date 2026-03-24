@@ -130,3 +130,38 @@
 - [x] Botão "Vender" no card do imóvel disponível para venda
 - [x] Imóvel alugado vai para aba "Alugados"
 - [x] Imóvel vendido vai para aba "Vendidos"
+
+## Módulo Gestão de Negócios
+
+### Estrutura e Navegação
+- [x] Sidebar: Novo Negócio, Negócios Ativos, Arquivados
+- [x] Sidebar: Calendário de Tarefas, Tarefas Urgentes
+- [x] Sidebar: Captadores (+ Registar, Ver Base de Dados)
+
+### Captadores (Parceiros de Negócio)
+- [x] Cadastro: Nome, Tipo (Corretor, Advogado, Investidor, Permutuário, Outros)
+- [x] Campos: Telemóvel, E-mail, CPF/CNPJ, % comissão padrão
+- [x] Dashboard do Captador: lista de negócios trazidos, estado e VGV total
+
+### Formulário Novo Negócio (5 seções)
+- [x] Seção 1 - Identificação: Nome, Dono (Próprio/Terceiros), Captador (busca), Endereço
+- [x] Seção 2 - Classificação: Fase Atual, Tipo de Operação, Prioridade
+- [x] Seção 3 - Dados Técnicos: Área Total, Área Útil, Zoneamento, Potencial Construtivo
+- [x] Seção 4 - Indicadores Financeiros: Custo, Valor Mercado, Máx Investimento, VGV, TIR, Margem
+- [x] Seção 5 - Riscos: Estado Documentação, Próxima Ação, Prioridade, Data Próxima Ação
+
+### Motor de Viabilidade Econômica (EVE)
+- [x] Inputs: Custo Terreno, Obra/Reforma, Custos Indiretos, Impostos, Comissões
+- [x] Outputs automáticos: Lucro Líquido, Margem %, TIR, ROI
+- [x] Farol de viabilidade: verde (bom), amarelo (arriscado), vermelho (inviável)
+
+### Tarefas e Alertas
+- [x] Calendário de Tarefas alimentado automaticamente pelas Próximas Ações
+- [x] Tarefas Urgentes com destaque visual
+- [x] Alerta quando data da próxima ação vence (tarefas atrasadas destacadas em vermelho)
+
+### Testes do Módulo Gestão de Negócios
+- [x] Testes de estrutura dos routers (negocios, captadores, viabilidade, businessTasks)
+- [x] Testes de validação de input (campos obrigatórios)
+- [x] Testes de controle de acesso por role
+- [x] Total: 89 testes passando (4 arquivos)

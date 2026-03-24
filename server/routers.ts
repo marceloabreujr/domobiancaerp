@@ -18,6 +18,10 @@ import {
   listRentalContracts, getRentalContract, createRentalContract, updateRentalContract, deleteRentalContract, getUpcomingRentAlerts, getPropertyFinancialSummary,
   listPropertyTodos, createPropertyTodo, updatePropertyTodo, deletePropertyTodo,
   listPropertyChecklists, createPropertyChecklist, updatePropertyChecklist, deletePropertyChecklist,
+  listCaptadores, getCaptador, createCaptador, updateCaptador, deleteCaptador, getCaptadorDashboard,
+  listNegocios, getNegocio, createNegocio, updateNegocio, deleteNegocio, archiveNegocio, unarchiveNegocio,
+  getViabilidade, upsertViabilidade,
+  listBusinessTasks, createBusinessTask, updateBusinessTask, deleteBusinessTask,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -647,6 +651,163 @@ export const appRouter = router({
         });
         return { answer: result.choices[0]?.message?.content ?? "Desculpe, não consegui processar sua pergunta." };
       }),
+  }),
+
+  // ─── MÓDULO GESTÃO DE NEGÓCIOS ──────────────────────────────────────────
+
+  captadores: router({
+    list: protectedProcedure.query(async () => listCaptadores()),
+    get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getCaptador(input.id)),
+    dashboard: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getCaptadorDashboard(input.id)),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        partnerType: z.enum(["corretor", "advogado", "investidor", "permutario", "outros"]).optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        cpfCnpj: z.string().optional(),
+        defaultCommission: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createCaptador(input as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        partnerType: z.enum(["corretor", "advogado", "investidor", "permutario", "outros"]).optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        cpfCnpj: z.string().optional(),
+        defaultCommission: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => { const { id, ...data } = input; await updateCaptador(id, data as any); }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteCaptador(input.id)),
+  }),
+
+  negocios: router({
+    list: protectedProcedure
+      .input(z.object({ isArchived: z.boolean().optional(), phase: z.string().optional() }).optional())
+      .query(async ({ input }) => listNegocios(input ?? undefined)),
+    get: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getNegocio(input.id)),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        ownership: z.enum(["proprio", "terceiros"]).optional(),
+        captadorId: z.number().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        phase: z.enum(["prospeccao", "analise", "negociacao", "due_diligence", "aprovado", "fechado", "cancelado"]).optional(),
+        operationType: z.enum(["compra", "venda", "permuta", "incorporacao", "loteamento", "reforma", "outro"]).optional(),
+        priority: z.enum(["baixa", "media", "alta", "urgente"]).optional(),
+        totalArea: z.string().optional(),
+        usableArea: z.string().optional(),
+        zoning: z.string().optional(),
+        constructivePotential: z.string().optional(),
+        opportunityCost: z.string().optional(),
+        marketValue: z.string().optional(),
+        maxInvestment: z.string().optional(),
+        estimatedVGV: z.string().optional(),
+        tirPercent: z.string().optional(),
+        profitMarginPercent: z.string().optional(),
+        documentationStatus: z.string().optional(),
+        nextAction: z.string().optional(),
+        nextActionPriority: z.enum(["normal", "urgente"]).optional(),
+        nextActionDate: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        return createNegocio({
+          ...input,
+          nextActionDate: input.nextActionDate ? new Date(input.nextActionDate) : undefined,
+        } as any);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        ownership: z.enum(["proprio", "terceiros"]).optional(),
+        captadorId: z.number().nullable().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        phase: z.enum(["prospeccao", "analise", "negociacao", "due_diligence", "aprovado", "fechado", "cancelado"]).optional(),
+        operationType: z.enum(["compra", "venda", "permuta", "incorporacao", "loteamento", "reforma", "outro"]).optional(),
+        priority: z.enum(["baixa", "media", "alta", "urgente"]).optional(),
+        totalArea: z.string().optional(),
+        usableArea: z.string().optional(),
+        zoning: z.string().optional(),
+        constructivePotential: z.string().optional(),
+        opportunityCost: z.string().optional(),
+        marketValue: z.string().optional(),
+        maxInvestment: z.string().optional(),
+        estimatedVGV: z.string().optional(),
+        tirPercent: z.string().optional(),
+        profitMarginPercent: z.string().optional(),
+        documentationStatus: z.string().optional(),
+        nextAction: z.string().optional(),
+        nextActionPriority: z.enum(["normal", "urgente"]).optional(),
+        nextActionDate: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, nextActionDate, ...rest } = input;
+        await updateNegocio(id, {
+          ...rest,
+          ...(nextActionDate !== undefined ? { nextActionDate: new Date(nextActionDate) } : {}),
+        } as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteNegocio(input.id)),
+    archive: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => archiveNegocio(input.id)),
+    unarchive: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => unarchiveNegocio(input.id)),
+  }),
+
+  viabilidade: router({
+    get: protectedProcedure.input(z.object({ negocioId: z.number() })).query(async ({ input }) => getViabilidade(input.negocioId)),
+    upsert: protectedProcedure
+      .input(z.object({
+        negocioId: z.number(),
+        landCost: z.string().optional(),
+        constructionCost: z.string().optional(),
+        indirectCosts: z.string().optional(),
+        taxes: z.string().optional(),
+        commissions: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => upsertViabilidade(input.negocioId, input as any)),
+  }),
+
+  businessTasks: router({
+    list: protectedProcedure
+      .input(z.object({ isCompleted: z.boolean().optional(), isUrgent: z.boolean().optional() }).optional())
+      .query(async ({ input }) => listBusinessTasks(input ?? undefined)),
+    create: protectedProcedure
+      .input(z.object({
+        negocioId: z.number().optional(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        dueDate: z.string(),
+        priority: z.enum(["normal", "urgente"]).optional(),
+      }))
+      .mutation(async ({ input }) => createBusinessTask({ ...input, dueDate: new Date(input.dueDate) } as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+        priority: z.enum(["normal", "urgente"]).optional(),
+        isCompleted: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, dueDate, ...rest } = input;
+        await updateBusinessTask(id, {
+          ...rest,
+          ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
+        } as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteBusinessTask(input.id)),
   }),
 });
 

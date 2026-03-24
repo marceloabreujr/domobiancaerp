@@ -43,6 +43,13 @@
       "when": 1774369524902,
       "tag": "0005_narrow_brood",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1774370276432,
+      "tag": "0006_colossal_juggernaut",
+      "breakpoints": true
     }
   ]
 }

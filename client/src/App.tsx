@@ -10,7 +10,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Obras from "./pages/Obras";
 import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
 import Suprimentos from "./pages/Suprimentos";
-import Negocios from "./pages/Negocios";
+import NegociosLayout from "./pages/negocios/NegociosLayout";
 import Configuracoes from "./pages/Configuracoes";
 
 function Router() {
@@ -22,7 +22,8 @@ function Router() {
       <Route path="/obras" component={Obras} />
       <Route path="/imoveis" component={ImoveisLayout} />
       <Route path="/suprimentos" component={Suprimentos} />
-      <Route path="/negocios" component={Negocios} />
+      <Route path="/negocios/:rest*" component={NegociosLayout} />
+      <Route path="/negocios" component={NegociosLayout} />
       <Route path="/configuracoes" component={Configuracoes} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

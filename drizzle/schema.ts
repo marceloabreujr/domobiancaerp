@@ -312,3 +312,105 @@ export const propertyChecklists = mysqlTable("property_checklists", {
 
 export type PropertyChecklist = typeof propertyChecklists.$inferSelect;
 export type InsertPropertyChecklist = typeof propertyChecklists.$inferInsert;
+
+// ─── MÓDULO GESTÃO DE NEGÓCIOS ──────────────────────────────────────────────
+
+// 1. Captadores (Parceiros de Negócio)
+export const captadores = mysqlTable("captadores", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  partnerType: mysqlEnum("partnerType", ["corretor", "advogado", "investidor", "permutario", "outros"]).default("corretor").notNull(),
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 320 }),
+  cpfCnpj: varchar("cpfCnpj", { length: 20 }),
+  defaultCommission: decimal("defaultCommission", { precision: 5, scale: 2 }).default("5.00"),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Captador = typeof captadores.$inferSelect;
+export type InsertCaptador = typeof captadores.$inferInsert;
+
+// 2. Negócios (Oportunidades)
+export const negocios = mysqlTable("negocios", {
+  id: int("id").autoincrement().primaryKey(),
+  // Seção 1 - Identificação
+  title: varchar("title", { length: 255 }).notNull(),
+  ownership: mysqlEnum("negOwnership", ["proprio", "terceiros"]).default("proprio").notNull(),
+  captadorId: int("captadorId"),
+  address: text("address"),
+  city: varchar("negCity", { length: 128 }),
+  state: varchar("negState", { length: 2 }),
+  // Seção 2 - Classificação e Estado
+  phase: mysqlEnum("phase", ["prospeccao", "analise", "negociacao", "due_diligence", "aprovado", "fechado", "cancelado"]).default("prospeccao").notNull(),
+  operationType: mysqlEnum("operationType", ["compra", "venda", "permuta", "incorporacao", "loteamento", "reforma", "outro"]).default("compra").notNull(),
+  priority: mysqlEnum("negPriority", ["baixa", "media", "alta", "urgente"]).default("media").notNull(),
+  // Seção 3 - Dados Técnicos
+  totalArea: decimal("totalArea", { precision: 12, scale: 2 }),
+  usableArea: decimal("usableArea", { precision: 12, scale: 2 }),
+  zoning: varchar("zoning", { length: 128 }),
+  constructivePotential: decimal("constructivePotential", { precision: 8, scale: 2 }),
+  // Seção 4 - Indicadores Financeiros
+  opportunityCost: decimal("opportunityCost", { precision: 14, scale: 2 }),
+  marketValue: decimal("marketValue", { precision: 14, scale: 2 }),
+  maxInvestment: decimal("maxInvestment", { precision: 14, scale: 2 }),
+  estimatedVGV: decimal("estimatedVGV", { precision: 14, scale: 2 }),
+  tirPercent: decimal("tirPercent", { precision: 8, scale: 2 }),
+  profitMarginPercent: decimal("profitMarginPercent", { precision: 8, scale: 2 }),
+  // Seção 5 - Riscos e Próximos Passos
+  documentationStatus: text("documentationStatus"),
+  nextAction: text("nextAction"),
+  nextActionPriority: mysqlEnum("nextActionPriority", ["normal", "urgente"]).default("normal"),
+  nextActionDate: date("nextActionDate"),
+  // Status
+  isArchived: boolean("isArchived").default(false),
+  notes: text("negNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Negocio = typeof negocios.$inferSelect;
+export type InsertNegocio = typeof negocios.$inferInsert;
+
+// 3. Viabilidade Econômica (EVE) — vinculada a um negócio
+export const viabilidade = mysqlTable("viabilidade", {
+  id: int("id").autoincrement().primaryKey(),
+  negocioId: int("negocioId").notNull(),
+  // Inputs de custo
+  landCost: decimal("landCost", { precision: 14, scale: 2 }).default("0"),
+  constructionCost: decimal("constructionCost", { precision: 14, scale: 2 }).default("0"),
+  indirectCosts: decimal("indirectCosts", { precision: 14, scale: 2 }).default("0"),
+  taxes: decimal("taxes", { precision: 14, scale: 2 }).default("0"),
+  commissions: decimal("commissions", { precision: 14, scale: 2 }).default("0"),
+  // Outputs calculados
+  totalCost: decimal("totalCost", { precision: 14, scale: 2 }),
+  netProfit: decimal("netProfit", { precision: 14, scale: 2 }),
+  profitMargin: decimal("profitMargin", { precision: 8, scale: 2 }),
+  tir: decimal("tir", { precision: 8, scale: 2 }),
+  roi: decimal("roi", { precision: 8, scale: 2 }),
+  // Farol
+  viabilityStatus: mysqlEnum("viabilityStatus", ["verde", "amarelo", "vermelho"]).default("amarelo"),
+  notes: text("viabNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Viabilidade = typeof viabilidade.$inferSelect;
+export type InsertViabilidade = typeof viabilidade.$inferInsert;
+
+// 4. Tarefas de Negócios (alimentadas automaticamente pelas Próximas Ações)
+export const businessTasks = mysqlTable("business_tasks", {
+  id: int("id").autoincrement().primaryKey(),
+  negocioId: int("negocioId"),
+  title: varchar("taskTitle", { length: 255 }).notNull(),
+  description: text("taskDescription"),
+  dueDate: date("taskDueDate").notNull(),
+  priority: mysqlEnum("taskPriority", ["normal", "urgente"]).default("normal").notNull(),
+  isCompleted: boolean("taskIsCompleted").default(false),
+  completedAt: timestamp("taskCompletedAt"),
+  createdAt: timestamp("taskCreatedAt").defaultNow().notNull(),
+});
+
+export type BusinessTask = typeof businessTasks.$inferSelect;
+export type InsertBusinessTask = typeof businessTasks.$inferInsert;

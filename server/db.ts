@@ -636,3 +636,228 @@ export async function deletePropertyChecklist(id: number) {
   if (!db) throw new Error("DB not available");
   await db.delete(propertyChecklists).where(eq(propertyChecklists.id, id));
 }
+
+// ─── MÓDULO GESTÃO DE NEGÓCIOS ──────────────────────────────────────────────
+
+import {
+  captadores, InsertCaptador,
+  negocios, InsertNegocio,
+  viabilidade, InsertViabilidade,
+  businessTasks, InsertBusinessTask,
+} from "../drizzle/schema";
+
+// ─── CAPTADORES ────────────────────────────────────────────────────────────
+
+export async function listCaptadores() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(captadores).orderBy(asc(captadores.name));
+}
+
+export async function getCaptador(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(captadores).where(eq(captadores.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createCaptador(data: InsertCaptador) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(captadores).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateCaptador(id: number, data: Partial<InsertCaptador>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(captadores).set(data).where(eq(captadores.id, id));
+}
+
+export async function deleteCaptador(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(captadores).where(eq(captadores.id, id));
+}
+
+export async function getCaptadorDashboard(captadorId: number) {
+  const db = await getDb();
+  if (!db) return { captador: undefined, deals: [], totalVGV: 0 };
+  const cap = await db.select().from(captadores).where(eq(captadores.id, captadorId)).limit(1);
+  const deals = await db.select().from(negocios).where(eq(negocios.captadorId, captadorId)).orderBy(desc(negocios.createdAt));
+  let totalVGV = 0;
+  for (const d of deals) {
+    totalVGV += parseFloat(d.estimatedVGV as string || "0");
+  }
+  return { captador: cap[0], deals, totalVGV };
+}
+
+// ─── NEGÓCIOS ──────────────────────────────────────────────────────────────
+
+export async function listNegocios(filters?: { isArchived?: boolean; phase?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (filters?.isArchived !== undefined) conditions.push(eq(negocios.isArchived, filters.isArchived));
+  if (filters?.phase) conditions.push(eq(negocios.phase, filters.phase as any));
+  if (conditions.length > 0) return db.select().from(negocios).where(and(...conditions)).orderBy(desc(negocios.createdAt));
+  return db.select().from(negocios).orderBy(desc(negocios.createdAt));
+}
+
+export async function getNegocio(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(negocios).where(eq(negocios.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createNegocio(data: InsertNegocio) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(negocios).values(data);
+  const negocioId = r[0].insertId;
+
+  // Auto-create task from nextAction if provided
+  if (data.nextAction && data.nextActionDate) {
+    await db.insert(businessTasks).values({
+      negocioId,
+      title: data.nextAction as string,
+      dueDate: data.nextActionDate,
+      priority: (data.nextActionPriority as any) || "normal",
+    });
+  }
+
+  return { id: negocioId };
+}
+
+export async function updateNegocio(id: number, data: Partial<InsertNegocio>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(negocios).set(data).where(eq(negocios.id, id));
+
+  // Auto-create task if nextAction changed
+  if (data.nextAction && data.nextActionDate) {
+    await db.insert(businessTasks).values({
+      negocioId: id,
+      title: data.nextAction as string,
+      dueDate: data.nextActionDate,
+      priority: (data.nextActionPriority as any) || "normal",
+    });
+  }
+}
+
+export async function deleteNegocio(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  // Delete related viabilidade and tasks
+  await db.delete(viabilidade).where(eq(viabilidade.negocioId, id));
+  await db.delete(businessTasks).where(eq(businessTasks.negocioId, id));
+  await db.delete(negocios).where(eq(negocios.id, id));
+}
+
+export async function archiveNegocio(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(negocios).set({ isArchived: true }).where(eq(negocios.id, id));
+}
+
+export async function unarchiveNegocio(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(negocios).set({ isArchived: false }).where(eq(negocios.id, id));
+}
+
+// ─── VIABILIDADE (EVE) ────────────────────────────────────────────────────
+
+export async function getViabilidade(negocioId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(viabilidade).where(eq(viabilidade.negocioId, negocioId)).limit(1);
+  return r[0];
+}
+
+export async function upsertViabilidade(negocioId: number, data: Partial<InsertViabilidade>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+
+  // Calculate outputs
+  const landCost = parseFloat(data.landCost as string || "0");
+  const constructionCost = parseFloat(data.constructionCost as string || "0");
+  const indirectCosts = parseFloat(data.indirectCosts as string || "0");
+  const taxes = parseFloat(data.taxes as string || "0");
+  const commissions = parseFloat(data.commissions as string || "0");
+  const totalCost = landCost + constructionCost + indirectCosts + taxes + commissions;
+
+  // Get VGV from the deal
+  const deal = await db.select().from(negocios).where(eq(negocios.id, negocioId)).limit(1);
+  const vgv = deal.length > 0 ? parseFloat(deal[0].estimatedVGV as string || "0") : 0;
+
+  const netProfit = vgv - totalCost;
+  const profitMargin = vgv > 0 ? (netProfit / vgv) * 100 : 0;
+  const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
+  // Simplified TIR (assume 1 year project)
+  const tir = totalCost > 0 ? ((vgv / totalCost) - 1) * 100 : 0;
+
+  // Determine viability status (traffic light)
+  let viabilityStatus: "verde" | "amarelo" | "vermelho" = "amarelo";
+  if (profitMargin >= 20 && roi >= 30) viabilityStatus = "verde";
+  else if (profitMargin < 10 || roi < 10) viabilityStatus = "vermelho";
+
+  const values = {
+    negocioId,
+    landCost: data.landCost,
+    constructionCost: data.constructionCost,
+    indirectCosts: data.indirectCosts,
+    taxes: data.taxes,
+    commissions: data.commissions,
+    totalCost: totalCost.toFixed(2),
+    netProfit: netProfit.toFixed(2),
+    profitMargin: profitMargin.toFixed(2),
+    tir: tir.toFixed(2),
+    roi: roi.toFixed(2),
+    viabilityStatus,
+    notes: data.notes,
+  };
+
+  const existing = await db.select().from(viabilidade).where(eq(viabilidade.negocioId, negocioId)).limit(1);
+  if (existing.length > 0) {
+    await db.update(viabilidade).set(values).where(eq(viabilidade.negocioId, negocioId));
+    return { id: existing[0].id, ...values };
+  } else {
+    const r = await db.insert(viabilidade).values(values as any);
+    return { id: r[0].insertId, ...values };
+  }
+}
+
+// ─── BUSINESS TASKS ────────────────────────────────────────────────────────
+
+export async function listBusinessTasks(filters?: { isCompleted?: boolean; isUrgent?: boolean }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions = [];
+  if (filters?.isCompleted !== undefined) conditions.push(eq(businessTasks.isCompleted, filters.isCompleted));
+  if (filters?.isUrgent) conditions.push(eq(businessTasks.priority, "urgente"));
+  if (conditions.length > 0) return db.select().from(businessTasks).where(and(...conditions)).orderBy(asc(businessTasks.dueDate));
+  return db.select().from(businessTasks).orderBy(asc(businessTasks.dueDate));
+}
+
+export async function createBusinessTask(data: InsertBusinessTask) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(businessTasks).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateBusinessTask(id: number, data: Partial<InsertBusinessTask>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const updateData: any = { ...data };
+  if (data.isCompleted) updateData.completedAt = new Date();
+  await db.update(businessTasks).set(updateData).where(eq(businessTasks.id, id));
+}
+
+export async function deleteBusinessTask(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(businessTasks).where(eq(businessTasks.id, id));
+}
