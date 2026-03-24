@@ -1,6 +1,16 @@
-import { eq } from "drizzle-orm";
+import { eq, desc, asc, and, lte, gte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, UserRole } from "../drizzle/schema";
+import {
+  InsertUser, users, UserRole,
+  employees, InsertEmployee,
+  timeOff, InsertTimeOff,
+  documents, InsertDocument,
+  calendarEvents, InsertCalendarEvent,
+  supplies, InsertSupply,
+  fleet, InsertFleetVehicle,
+  pettyCash, InsertPettyCashEntry,
+  tickets, InsertTicket,
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -17,26 +27,18 @@ export async function getDb() {
   return _db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
+// ─── USERS ──────────────────────────────────────────────────────────────────
 
+export async function upsertUser(user: InsertUser): Promise<void> {
+  if (!user.openId) throw new Error("User openId is required for upsert");
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
+  if (!db) { console.warn("[Database] Cannot upsert user: database not available"); return; }
 
   try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
+    const values: InsertUser = { openId: user.openId };
     const updateSet: Record<string, unknown> = {};
-
     const textFields = ["name", "email", "loginMethod"] as const;
     type TextField = (typeof textFields)[number];
-
     const assignNullable = (field: TextField) => {
       const value = user[field];
       if (value === undefined) return;
@@ -44,69 +46,279 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values[field] = normalized;
       updateSet[field] = normalized;
     };
-
     textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+    if (user.lastSignedIn !== undefined) { values.lastSignedIn = user.lastSignedIn; updateSet.lastSignedIn = user.lastSignedIn; }
+    if (user.role !== undefined) { values.role = user.role; updateSet.role = user.role; }
+    else if (user.openId === ENV.ownerOpenId) { values.role = 'admin'; updateSet.role = 'admin'; }
+    if (!values.lastSignedIn) values.lastSignedIn = new Date();
+    if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
+    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+  } catch (error) { console.error("[Database] Failed to upsert user:", error); throw error; }
 }
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
-  }
-
+  if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
-/** Atualizar role de um usuário (apenas admin pode chamar) */
 export async function updateUserRole(userId: number, role: UserRole) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-
   await db.update(users).set({ role }).where(eq(users.id, userId));
 }
 
-/** Listar todos os usuários (para painel admin) */
 export async function listUsers() {
   const db = await getDb();
   if (!db) return [];
+  return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, lastSignedIn: users.lastSignedIn, createdAt: users.createdAt }).from(users);
+}
 
-  return db.select({
-    id: users.id,
-    name: users.name,
-    email: users.email,
-    role: users.role,
-    lastSignedIn: users.lastSignedIn,
-    createdAt: users.createdAt,
-  }).from(users);
+// ─── EMPLOYEES (RH) ────────────────────────────────────────────────────────
+
+export async function listEmployees() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(employees).orderBy(asc(employees.name));
+}
+
+export async function getEmployee(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(employees).where(eq(employees.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createEmployee(data: InsertEmployee) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(employees).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateEmployee(id: number, data: Partial<InsertEmployee>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(employees).set(data).where(eq(employees.id, id));
+}
+
+export async function deleteEmployee(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(employees).where(eq(employees.id, id));
+}
+
+// ─── TIME OFF (Férias/Faltas) ──────────────────────────────────────────────
+
+export async function listTimeOff(employeeId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (employeeId) return db.select().from(timeOff).where(eq(timeOff.employeeId, employeeId)).orderBy(desc(timeOff.startDate));
+  return db.select().from(timeOff).orderBy(desc(timeOff.startDate));
+}
+
+export async function createTimeOff(data: InsertTimeOff) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(timeOff).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateTimeOff(id: number, data: Partial<InsertTimeOff>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(timeOff).set(data).where(eq(timeOff.id, id));
+}
+
+export async function deleteTimeOff(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(timeOff).where(eq(timeOff.id, id));
+}
+
+// ─── DOCUMENTS (GED) ───────────────────────────────────────────────────────
+
+export async function listDocuments(category?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  if (category) return db.select().from(documents).where(eq(documents.category, category as any)).orderBy(desc(documents.createdAt));
+  return db.select().from(documents).orderBy(desc(documents.createdAt));
+}
+
+export async function createDocument(data: InsertDocument) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(documents).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateDocument(id: number, data: Partial<InsertDocument>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(documents).set(data).where(eq(documents.id, id));
+}
+
+export async function deleteDocument(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(documents).where(eq(documents.id, id));
+}
+
+export async function getExpiringDocuments(daysAhead: number = 30) {
+  const db = await getDb();
+  if (!db) return [];
+  const today = new Date().toISOString().split("T")[0];
+  const futureDate = new Date(Date.now() + daysAhead * 86400000).toISOString().split("T")[0];
+  return db.select().from(documents).where(
+    and(
+      sql`${documents.expiryDate} >= ${today}`,
+      sql`${documents.expiryDate} <= ${futureDate}`
+    )
+  ).orderBy(asc(documents.expiryDate));
+}
+
+// ─── CALENDAR EVENTS ────────────────────────────────────────────────────────
+
+export async function listCalendarEvents() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(calendarEvents).orderBy(asc(calendarEvents.eventDate));
+}
+
+export async function createCalendarEvent(data: InsertCalendarEvent) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(calendarEvents).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateCalendarEvent(id: number, data: Partial<InsertCalendarEvent>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(calendarEvents).set(data).where(eq(calendarEvents.id, id));
+}
+
+export async function deleteCalendarEvent(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(calendarEvents).where(eq(calendarEvents.id, id));
+}
+
+// ─── SUPPLIES (Consumíveis) ─────────────────────────────────────────────────
+
+export async function listSupplies() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(supplies).orderBy(asc(supplies.name));
+}
+
+export async function createSupply(data: InsertSupply) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(supplies).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateSupply(id: number, data: Partial<InsertSupply>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(supplies).set(data).where(eq(supplies.id, id));
+}
+
+export async function deleteSupply(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(supplies).where(eq(supplies.id, id));
+}
+
+// ─── FLEET (Frota) ─────────────────────────────────────────────────────────
+
+export async function listFleet() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(fleet).orderBy(asc(fleet.model));
+}
+
+export async function createFleetVehicle(data: InsertFleetVehicle) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(fleet).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateFleetVehicle(id: number, data: Partial<InsertFleetVehicle>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(fleet).set(data).where(eq(fleet.id, id));
+}
+
+export async function deleteFleetVehicle(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(fleet).where(eq(fleet.id, id));
+}
+
+// ─── PETTY CASH (Fundo de Maneio) ──────────────────────────────────────────
+
+export async function listPettyCash() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pettyCash).orderBy(desc(pettyCash.date));
+}
+
+export async function createPettyCashEntry(data: InsertPettyCashEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(pettyCash).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function deletePettyCashEntry(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(pettyCash).where(eq(pettyCash.id, id));
+}
+
+export async function getPettyCashBalance() {
+  const db = await getDb();
+  if (!db) return { entradas: 0, saidas: 0, saldo: 0 };
+  const result = await db.select({
+    type: pettyCash.type,
+    total: sql<string>`SUM(${pettyCash.amount})`,
+  }).from(pettyCash).groupBy(pettyCash.type);
+  let entradas = 0, saidas = 0;
+  for (const row of result) {
+    if (row.type === "entrada") entradas = parseFloat(row.total || "0");
+    if (row.type === "saida") saidas = parseFloat(row.total || "0");
+  }
+  return { entradas, saidas, saldo: entradas - saidas };
+}
+
+// ─── TICKETS (Chamados) ─────────────────────────────────────────────────────
+
+export async function listTickets(status?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  if (status) return db.select().from(tickets).where(eq(tickets.status, status as any)).orderBy(desc(tickets.createdAt));
+  return db.select().from(tickets).orderBy(desc(tickets.createdAt));
+}
+
+export async function createTicket(data: InsertTicket) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(tickets).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateTicket(id: number, data: Partial<InsertTicket>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(tickets).set(data).where(eq(tickets.id, id));
+}
+
+export async function deleteTicket(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(tickets).where(eq(tickets.id, id));
 }

@@ -15,6 +15,13 @@
       "when": 1774364324626,
       "tag": "0001_shallow_vector",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774365933636,
+      "tag": "0002_talented_zuras",
+      "breakpoints": true
     }
   ]
 }

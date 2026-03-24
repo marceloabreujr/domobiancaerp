@@ -6,7 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Financeiro from "./pages/Financeiro";
-import Administrativo from "./pages/Administrativo";
+import AdminLayout from "./pages/admin/AdminLayout";
 import Obras from "./pages/Obras";
 import Imoveis from "./pages/Imoveis";
 import Suprimentos from "./pages/Suprimentos";
@@ -18,7 +18,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/financeiro" component={Financeiro} />
-      <Route path="/administrativo" component={Administrativo} />
+      <Route path="/administrativo" component={AdminLayout} />
       <Route path="/obras" component={Obras} />
       <Route path="/imoveis" component={Imoveis} />
       <Route path="/suprimentos" component={Suprimentos} />
