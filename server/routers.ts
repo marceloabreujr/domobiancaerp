@@ -1,9 +1,11 @@
-import { COOKIE_NAME } from "@shared/const";
+import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { sdk } from "./_core/sdk";
+import bcrypt from "bcryptjs";
 import {
-  listUsers, updateUserRole,
+  listUsers, updateUserRole, getUserByUsername, createLocalUser, updateUserPassword, updateUserActive, updateUserProfile,
   listEmployees, getEmployee, createEmployee, updateEmployee, deleteEmployee,
   listTimeOff, createTimeOff, updateTimeOff, deleteTimeOff,
   listDocuments, createDocument, updateDocument, deleteDocument, getExpiringDocuments,
@@ -51,6 +53,40 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    login: publicProcedure
+      .input(z.object({ username: z.string().min(1), password: z.string().min(1) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await getUserByUsername(input.username);
+        if (!user || !user.passwordHash) {
+          throw new Error("Usuário ou senha inválidos");
+        }
+        if (!user.isActive) {
+          throw new Error("Usuário desativado. Contacte o administrador.");
+        }
+        const valid = await bcrypt.compare(input.password, user.passwordHash);
+        if (!valid) {
+          throw new Error("Usuário ou senha inválidos");
+        }
+        // Create JWT session
+        const sessionToken = await sdk.createSessionToken(user.openId, {
+          name: user.name || "",
+          expiresInMs: ONE_YEAR_MS,
+        });
+        const cookieOptions = getSessionCookieOptions(ctx.req);
+        ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+        return { success: true, user: { id: user.id, name: user.name, role: user.role } };
+      }),
+    changePassword: protectedProcedure
+      .input(z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(6) }))
+      .mutation(async ({ input, ctx }) => {
+        const user = await getUserByUsername(ctx.user.username ?? "");
+        if (!user || !user.passwordHash) throw new Error("Usuário não encontrado");
+        const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
+        if (!valid) throw new Error("Senha atual incorreta");
+        const hash = await bcrypt.hash(input.newPassword, 10);
+        await updateUserPassword(user.id, hash);
+        return { success: true } as const;
+      }),
   }),
 
   users: router({
@@ -58,6 +94,46 @@ export const appRouter = router({
     updateRole: adminProcedure
       .input(z.object({ userId: z.number(), role: z.enum(["admin", "gerente", "operador"]) }))
       .mutation(async ({ input }) => { await updateUserRole(input.userId, input.role); return { success: true } as const; }),
+    create: adminProcedure
+      .input(z.object({
+        username: z.string().min(3).max(64),
+        password: z.string().min(6),
+        name: z.string().min(1),
+        email: z.string().optional(),
+        role: z.enum(["admin", "gerente", "operador"]),
+      }))
+      .mutation(async ({ input }) => {
+        const existing = await getUserByUsername(input.username);
+        if (existing) throw new Error("Nome de usuário já existe");
+        const hash = await bcrypt.hash(input.password, 10);
+        const user = await createLocalUser({
+          username: input.username,
+          passwordHash: hash,
+          name: input.name,
+          email: input.email,
+          role: input.role,
+        });
+        return { success: true, user };
+      }),
+    resetPassword: adminProcedure
+      .input(z.object({ userId: z.number(), newPassword: z.string().min(6) }))
+      .mutation(async ({ input }) => {
+        const hash = await bcrypt.hash(input.newPassword, 10);
+        await updateUserPassword(input.userId, hash);
+        return { success: true } as const;
+      }),
+    toggleActive: adminProcedure
+      .input(z.object({ userId: z.number(), isActive: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await updateUserActive(input.userId, input.isActive);
+        return { success: true } as const;
+      }),
+    updateProfile: protectedProcedure
+      .input(z.object({ name: z.string().optional(), email: z.string().optional() }))
+      .mutation(async ({ input, ctx }) => {
+        await updateUserProfile(ctx.user.id, input);
+        return { success: true } as const;
+      }),
   }),
 
   // ─── MÓDULO ADMINISTRATIVO ──────────────────────────────────────────────

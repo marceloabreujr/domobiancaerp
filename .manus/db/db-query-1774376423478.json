@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, openId, username, name, email, role, isActive, loginMethod FROM users WHERE username = 'mauri';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SELECT id, openId, username, name, email, role, isActive, loginMethod FROM users WHERE username = 'mauri';",
+  "rows": [
+    {
+      "id": "90243",
+      "openId": "local_mauri_1774376417545",
+      "username": "mauri",
+      "name": "Mauri Carvalho",
+      "email": "mauri@domobianca.com",
+      "role": "admin",
+      "isActive": "1",
+      "loginMethod": "local"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\topenId\tusername\tname\temail\trole\tisActive\tloginMethod\n90243\tlocal_mauri_1774376417545\tmauri\tMauri Carvalho\tmauri@domobianca.com\tadmin\t1\tlocal\n",
+  "stderr": "",
+  "execution_time_ms": 197
+}

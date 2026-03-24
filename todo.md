@@ -233,3 +233,29 @@
 - [x] Testes de controle de acesso por role (anônimo bloqueado, operador/gerente permitido)
 - [x] Testes de funcionalidade com DB (12 categorias, itens por categoria, busca)
 - [x] Total: 151 testes passando (6 arquivos)
+
+## Sistema de Login com Usuário e Senha
+
+### Autenticação
+- [x] Adicionar campos username e password (hash) na tabela users
+- [x] Rota de login com usuário/senha (POST /api/auth/login)
+- [x] Hash de senha com bcrypt
+- [x] Sessão via JWT/cookie (manter compatibilidade com sistema atual)
+- [x] Tela de login com formulário de usuário e senha
+- [x] Logout funcional
+
+### Gerenciamento de Usuários (Admin/Master)
+- [x] Painel na aba Configurações para criar novos usuários
+- [x] Definir permissão ao criar usuário (Admin/Gerente/Operador)
+- [x] Alterar permissão de usuários existentes
+- [x] Resetar senha de outros usuários
+- [x] Listar todos os usuários com seus níveis de acesso
+
+### Usuário Master
+- [x] Criar usuário master (Marcelo) como Admin
+- [x] Seed inicial com credenciais do master
+
+### Testes
+- [x] Testes de login com credenciais válidas/inválidas
+- [x] Testes de controle de acesso ao painel de usuários
+- [x] Testes de criação de novos usuários

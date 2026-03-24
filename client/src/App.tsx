@@ -11,10 +11,12 @@ import ObrasLayout from "./pages/obras/ObrasLayout";
 import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
 import NegociosLayout from "./pages/negocios/NegociosLayout";
 import Configuracoes from "./pages/Configuracoes";
+import Login from "./pages/Login";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/login" component={Login} />
       <Route path="/" component={Home} />
       <Route path="/financeiro" component={Financeiro} />
       <Route path="/administrativo" component={AdminLayout} />

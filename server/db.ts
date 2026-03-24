@@ -84,7 +84,54 @@ export async function updateUserRole(userId: number, role: UserRole) {
 export async function listUsers() {
   const db = await getDb();
   if (!db) return [];
-  return db.select({ id: users.id, name: users.name, email: users.email, role: users.role, lastSignedIn: users.lastSignedIn, createdAt: users.createdAt }).from(users);
+  return db.select({ id: users.id, username: users.username, name: users.name, email: users.email, role: users.role, isActive: users.isActive, lastSignedIn: users.lastSignedIn, createdAt: users.createdAt }).from(users);
+}
+
+export async function getUserByUsername(username: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createLocalUser(data: { username: string; passwordHash: string; name: string; email?: string; role: UserRole }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const openId = `local_${data.username}_${Date.now()}`;
+  await db.insert(users).values({
+    openId,
+    username: data.username,
+    passwordHash: data.passwordHash,
+    name: data.name,
+    email: data.email ?? null,
+    loginMethod: "local",
+    role: data.role,
+    isActive: true,
+    lastSignedIn: new Date(),
+  });
+  return getUserByUsername(data.username);
+}
+
+export async function updateUserPassword(userId: number, passwordHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+}
+
+export async function updateUserActive(userId: number, isActive: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(users).set({ isActive }).where(eq(users.id, userId));
+}
+
+export async function updateUserProfile(userId: number, data: { name?: string; email?: string }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updateSet: Record<string, unknown> = {};
+  if (data.name !== undefined) updateSet.name = data.name;
+  if (data.email !== undefined) updateSet.email = data.email;
+  if (Object.keys(updateSet).length === 0) return;
+  await db.update(users).set(updateSet).where(eq(users.id, userId));
 }
 
 // ─── EMPLOYEES (RH) ────────────────────────────────────────────────────────
