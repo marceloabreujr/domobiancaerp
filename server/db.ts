@@ -1281,3 +1281,386 @@ export async function updateChecklistNotes(id: number, notes: string) {
   if (!db) return;
   await db.update(constructionChecklist).set({ notes }).where(eq(constructionChecklist.id, id));
 }
+
+// ─── MÓDULO FINANCEIRO ──────────────────────────────────────────────────────
+
+import {
+  financialEntries, InsertFinancialEntry,
+  recurringBills, InsertRecurringBill,
+  bankImports, InsertBankImport,
+  bankTransactions, InsertBankTransaction,
+} from "../drizzle/schema";
+
+// ─── FINANCIAL ENTRIES (Lançamentos) ────────────────────────────────────────
+
+export async function listFinancialEntries(filters?: {
+  type?: "entrada" | "saida";
+  status?: string;
+  propertyId?: number;
+  constructionId?: number;
+  costCenter?: string;
+  startDate?: string;
+  endDate?: string;
+}) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.type) conditions.push(eq(financialEntries.type, filters.type));
+  if (filters?.status) conditions.push(eq(financialEntries.status, filters.status as any));
+  if (filters?.propertyId) conditions.push(eq(financialEntries.propertyId, filters.propertyId));
+  if (filters?.constructionId) conditions.push(eq(financialEntries.constructionId, filters.constructionId));
+  if (filters?.costCenter) conditions.push(eq(financialEntries.costCenter, filters.costCenter));
+  if (filters?.startDate) conditions.push(gte(financialEntries.dueDate, filters.startDate));
+  if (filters?.endDate) conditions.push(lte(financialEntries.dueDate, filters.endDate));
+  if (conditions.length > 0) {
+    return db.select().from(financialEntries).where(and(...conditions)).orderBy(desc(financialEntries.dueDate));
+  }
+  return db.select().from(financialEntries).orderBy(desc(financialEntries.dueDate));
+}
+
+export async function getFinancialEntry(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(financialEntries).where(eq(financialEntries.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createFinancialEntry(data: InsertFinancialEntry) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(financialEntries).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateFinancialEntry(id: number, data: Partial<InsertFinancialEntry>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(financialEntries).set(data).where(eq(financialEntries.id, id));
+}
+
+export async function deleteFinancialEntry(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(financialEntries).where(eq(financialEntries.id, id));
+}
+
+export async function getFinancialSummary(filters?: { startDate?: string; endDate?: string }) {
+  const db = await getDb();
+  if (!db) return { totalReceitas: 0, totalDespesas: 0, saldo: 0, aReceber: 0, aPagar: 0, atrasados: 0 };
+  
+  const conditions: any[] = [];
+  if (filters?.startDate) conditions.push(gte(financialEntries.dueDate, filters.startDate));
+  if (filters?.endDate) conditions.push(lte(financialEntries.dueDate, filters.endDate));
+  
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+  
+  const result = await db.select({
+    type: financialEntries.type,
+    status: financialEntries.status,
+    total: sql<string>`COALESCE(SUM(${financialEntries.amount}), 0)`,
+    count: sql<number>`COUNT(*)`,
+  }).from(financialEntries)
+    .where(whereClause)
+    .groupBy(financialEntries.type, financialEntries.status);
+  
+  let totalReceitas = 0, totalDespesas = 0, aReceber = 0, aPagar = 0, atrasados = 0;
+  for (const row of result) {
+    const total = parseFloat(row.total || "0");
+    if (row.type === "entrada") {
+      if (row.status === "pago") totalReceitas += total;
+      if (row.status === "aberto") aReceber += total;
+      if (row.status === "atrasado") { aReceber += total; atrasados += total; }
+    } else {
+      if (row.status === "pago") totalDespesas += total;
+      if (row.status === "aberto") aPagar += total;
+      if (row.status === "atrasado") { aPagar += total; atrasados += total; }
+    }
+  }
+  return { totalReceitas, totalDespesas, saldo: totalReceitas - totalDespesas, aReceber, aPagar, atrasados };
+}
+
+export async function getOverdueEntries() {
+  const db = await getDb();
+  if (!db) return [];
+  const today = new Date().toISOString().split("T")[0];
+  return db.select().from(financialEntries).where(
+    and(
+      eq(financialEntries.status, "aberto"),
+      sql`${financialEntries.dueDate} < ${today}`
+    )
+  ).orderBy(asc(financialEntries.dueDate));
+}
+
+export async function markEntryAsPaid(id: number, paymentDate?: string) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(financialEntries).set({
+    status: "pago",
+    paymentDate: paymentDate || new Date().toISOString().split("T")[0],
+  }).where(eq(financialEntries.id, id));
+}
+
+export async function getEntriesByProperty(propertyId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(financialEntries).where(eq(financialEntries.propertyId, propertyId)).orderBy(desc(financialEntries.dueDate));
+}
+
+// ─── RECURRING BILLS (Contas Recorrentes) ──────────────────────────────────
+
+export async function listRecurringBills(filters?: { propertyId?: number; isActive?: boolean }) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [];
+  if (filters?.propertyId) conditions.push(eq(recurringBills.propertyId, filters.propertyId));
+  if (filters?.isActive !== undefined) conditions.push(eq(recurringBills.isActive, filters.isActive));
+  if (conditions.length > 0) {
+    return db.select().from(recurringBills).where(and(...conditions)).orderBy(desc(recurringBills.createdAt));
+  }
+  return db.select().from(recurringBills).orderBy(desc(recurringBills.createdAt));
+}
+
+export async function getRecurringBill(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const r = await db.select().from(recurringBills).where(eq(recurringBills.id, id)).limit(1);
+  return r[0];
+}
+
+export async function createRecurringBill(data: InsertRecurringBill) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(recurringBills).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateRecurringBill(id: number, data: Partial<InsertRecurringBill>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(recurringBills).set(data).where(eq(recurringBills.id, id));
+}
+
+export async function deleteRecurringBill(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(recurringBills).where(eq(recurringBills.id, id));
+}
+
+// Gerar lançamentos de IPTU (12 parcelas do ano)
+export async function generateIPTUEntries(recurringBillId: number, year: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const bill = await getRecurringBill(recurringBillId);
+  if (!bill) throw new Error("Conta recorrente não encontrada");
+  
+  const entries: InsertFinancialEntry[] = [];
+  for (let month = 1; month <= 12; month++) {
+    const dueDay = bill.billingDay || 10;
+    const dueDate = `${year}-${String(month).padStart(2, "0")}-${String(dueDay).padStart(2, "0")}`;
+    entries.push({
+      type: "saida",
+      category: "iptu",
+      description: `IPTU ${month}/${year} - ${bill.title}`,
+      amount: bill.amount,
+      dueDate,
+      status: "aberto",
+      propertyId: bill.propertyId,
+      costCenter: bill.costCenter || "administracao_central",
+      recurringBillId: bill.id,
+      installmentNumber: month,
+      totalInstallments: 12,
+    });
+  }
+  if (entries.length > 0) {
+    await db.insert(financialEntries).values(entries);
+  }
+  // Atualizar última data de geração
+  await db.update(recurringBills).set({ lastGeneratedDate: `${year}-12-31` }).where(eq(recurringBills.id, recurringBillId));
+  return { generated: entries.length };
+}
+
+// Gerar lançamentos mensais de conta recorrente
+export async function generateRecurringEntries(recurringBillId: number, months: number = 12) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const bill = await getRecurringBill(recurringBillId);
+  if (!bill) throw new Error("Conta recorrente não encontrada");
+  
+  const startDate = bill.lastGeneratedDate ? new Date(bill.lastGeneratedDate) : new Date(bill.startDate);
+  const entries: InsertFinancialEntry[] = [];
+  
+  for (let i = 0; i < months; i++) {
+    const d = new Date(startDate);
+    d.setMonth(d.getMonth() + i + 1);
+    const dueDay = bill.billingDay || 10;
+    const dueDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(dueDay).padStart(2, "0")}`;
+    entries.push({
+      type: bill.type,
+      category: bill.category as any,
+      description: `${bill.title} - ${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`,
+      amount: bill.amount,
+      dueDate,
+      status: "aberto",
+      propertyId: bill.propertyId,
+      costCenter: bill.costCenter || "administracao_central",
+      recurringBillId: bill.id,
+      installmentNumber: i + 1,
+      totalInstallments: months,
+    });
+  }
+  if (entries.length > 0) {
+    await db.insert(financialEntries).values(entries);
+  }
+  const lastEntry = entries[entries.length - 1];
+  if (lastEntry) {
+    await db.update(recurringBills).set({ lastGeneratedDate: lastEntry.dueDate }).where(eq(recurringBills.id, recurringBillId));
+  }
+  return { generated: entries.length };
+}
+
+// Gerar parcelas de aluguel a partir de contrato de locação
+export async function generateRentInstallments(contractId: number, months: number = 12) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  
+  const contract = await getRentalContract(contractId);
+  if (!contract) throw new Error("Contrato não encontrado");
+  
+  const entries: InsertFinancialEntry[] = [];
+  const startDate = new Date(contract.startDate);
+  
+  for (let i = 0; i < months; i++) {
+    const d = new Date(startDate);
+    d.setMonth(d.getMonth() + i);
+    const dueDay = contract.billingDay || 10;
+    const dueDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(dueDay).padStart(2, "0")}`;
+    
+    let totalAmount = parseFloat(String(contract.rentAmount));
+    let desc = `Aluguel ${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    
+    if (contract.isPackage && contract.packageTotal) {
+      totalAmount = parseFloat(String(contract.packageTotal));
+      desc = `Pacote Locação ${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
+    }
+    
+    entries.push({
+      type: "entrada",
+      category: "aluguel",
+      description: desc,
+      amount: String(totalAmount) as any,
+      dueDate,
+      status: "aberto",
+      propertyId: contract.propertyId,
+      costCenter: `imovel_${contract.propertyId}`,
+      rentalContractId: contract.id,
+      installmentNumber: i + 1,
+      totalInstallments: months,
+    });
+  }
+  if (entries.length > 0) {
+    await db.insert(financialEntries).values(entries);
+  }
+  return { generated: entries.length };
+}
+
+// ─── BANK IMPORTS (Conciliação Bancária) ───────────────────────────────────
+
+export async function listBankImports() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bankImports).orderBy(desc(bankImports.importDate));
+}
+
+export async function createBankImport(data: InsertBankImport) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(bankImports).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function updateBankImport(id: number, data: Partial<InsertBankImport>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(bankImports).set(data).where(eq(bankImports.id, id));
+}
+
+// ─── BANK TRANSACTIONS (Transações CSV) ────────────────────────────────────
+
+export async function listBankTransactions(bankImportId: number, status?: string) {
+  const db = await getDb();
+  if (!db) return [];
+  const conditions: any[] = [eq(bankTransactions.bankImportId, bankImportId)];
+  if (status) conditions.push(eq(bankTransactions.status, status as any));
+  return db.select().from(bankTransactions).where(and(...conditions)).orderBy(asc(bankTransactions.transactionDate));
+}
+
+export async function createBankTransaction(data: InsertBankTransaction) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(bankTransactions).values(data);
+  return { id: r[0].insertId };
+}
+
+export async function createBankTransactionsBatch(data: InsertBankTransaction[]) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  if (data.length === 0) return;
+  await db.insert(bankTransactions).values(data);
+}
+
+export async function updateBankTransaction(id: number, data: Partial<InsertBankTransaction>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(bankTransactions).set(data).where(eq(bankTransactions.id, id));
+}
+
+// Conciliar transação bancária com lançamento financeiro
+export async function conciliateTransaction(transactionId: number, entryId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  // Marcar transação como conciliada
+  await db.update(bankTransactions).set({
+    status: "conciliado",
+    matchedEntryId: entryId,
+  }).where(eq(bankTransactions.id, transactionId));
+  // Marcar lançamento como conciliado e pago
+  await db.update(financialEntries).set({
+    isConciliated: true,
+    status: "pago",
+    paymentDate: new Date().toISOString().split("T")[0],
+  }).where(eq(financialEntries.id, entryId));
+}
+
+// Buscar lançamentos candidatos para conciliação automática
+export async function findConciliationCandidates(amount: number, dateRange: { start: string; end: string }) {
+  const db = await getDb();
+  if (!db) return [];
+  const isPositive = amount > 0;
+  const absAmount = Math.abs(amount);
+  const tolerance = absAmount * 0.02; // 2% de tolerância
+  
+  return db.select().from(financialEntries).where(
+    and(
+      eq(financialEntries.type, isPositive ? "entrada" : "saida"),
+      eq(financialEntries.status, "aberto"),
+      eq(financialEntries.isConciliated, false),
+      gte(financialEntries.dueDate, dateRange.start),
+      lte(financialEntries.dueDate, dateRange.end),
+      sql`ABS(${financialEntries.amount} - ${absAmount}) <= ${tolerance}`
+    )
+  ).orderBy(asc(financialEntries.dueDate)).limit(5);
+}
+
+// Resumo por centro de custo
+export async function getFinancialByProperty() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({
+    propertyId: financialEntries.propertyId,
+    costCenter: financialEntries.costCenter,
+    type: financialEntries.type,
+    totalAmount: sql<string>`COALESCE(SUM(${financialEntries.amount}), 0)`,
+    count: sql<number>`COUNT(*)`,
+  }).from(financialEntries)
+    .groupBy(financialEntries.propertyId, financialEntries.costCenter, financialEntries.type);
+}

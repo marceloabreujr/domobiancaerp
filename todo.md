@@ -259,3 +259,49 @@
 - [x] Testes de login com credenciais válidas/inválidas
 - [x] Testes de controle de acesso ao painel de usuários
 - [x] Testes de criação de novos usuários
+
+## Módulo Financeiro
+
+### Conciliação Bancária (Importação CSV)
+- [x] Upload e parse de arquivo CSV bancário (Data, Descrição, Valor, ID Transação)
+- [x] Lógica de conciliação: valor negativo → Contas a Pagar, positivo → Contas a Receber
+- [x] Área de Conferência: itens identificados automaticamente + itens pendentes de confirmação
+- [x] Prevenção de duplicatas via ID_Transacao_CSV
+- [x] Confirmar/rejeitar sugestões de conciliação manualmente
+
+### Contas a Receber (integrado com Imóveis)
+- [x] Cronograma financeiro atrelado a cada imóvel (parcelas mensais, balões, reforços)
+- [x] Geração automática de parcelas com índices de correção (INCC, IGPM, IPCA)
+- [x] Status de cobrança: A Vencer, Recebido, Inadimplente
+- [x] Alerta automático de inadimplência após X dias do vencimento
+- [x] Listagem com filtros por imóvel, status e período
+
+### Contas a Pagar (Custos Fixos e Variáveis)
+- [x] Cadastro de contas recorrentes (IPTU, Condomínio)
+- [x] Geração automática de 12 lançamentos de IPTU por inscrição imobiliária
+- [x] Rateio por Centro de Custo (imóvel específico ou Administração Central)
+- [x] Categorias: IPTU, Condomínio, Aluguel, Venda, Manutenção, Outros
+- [x] Status: Aberto, Pago, Cancelado, Atrasado
+
+### Schema e Backend
+- [x] Tabela financialEntries (lançamentos financeiros com todos os campos)
+- [x] Tabela financialInstallments (parcelas geradas por imóvel)
+- [x] Tabela recurringBills (contas recorrentes)
+- [x] Tabela bankConciliation (importações CSV e conferência)
+- [x] DB helpers para CRUD financeiro
+- [x] Routers tRPC para todas as operações financeiras
+
+### Frontend
+- [x] Dashboard Financeiro com resumo (total a receber, total a pagar, saldo)
+- [x] Aba Contas a Receber com listagem e filtros
+- [x] Aba Contas a Pagar com listagem e filtros
+- [x] Aba Conciliação Bancária com upload CSV e área de conferência
+- [x] Formulário de novo lançamento manual
+- [x] Formulário de conta recorrente (IPTU/Condomínio)
+- [x] Gerador de parcelas por imóvel
+
+### Testes
+- [x] Testes de estrutura dos routers financeiros
+- [x] Testes de validação de input
+- [x] Testes de controle de acesso
+- [x] Testes de lógica de conciliação (positivo/negativo)

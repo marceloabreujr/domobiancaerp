@@ -37,6 +37,14 @@ import {
   getLastClosedValue,
   getSupplyFiles, createSupplyFile, deleteSupplyFile,
   getConstructionChecklist, initializeChecklist, toggleChecklistItem, updateChecklistNotes,
+  // Financeiro
+  listFinancialEntries, getFinancialEntry, createFinancialEntry, updateFinancialEntry, deleteFinancialEntry,
+  getFinancialSummary, getOverdueEntries, markEntryAsPaid, getEntriesByProperty, getFinancialByProperty,
+  listRecurringBills, getRecurringBill, createRecurringBill, updateRecurringBill, deleteRecurringBill,
+  generateIPTUEntries, generateRecurringEntries, generateRentInstallments,
+  listBankImports, createBankImport, updateBankImport,
+  listBankTransactions, createBankTransaction, createBankTransactionsBatch, updateBankTransaction,
+  conciliateTransaction, findConciliationCandidates,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -1198,6 +1206,287 @@ export const appRouter = router({
     updateNotes: protectedProcedure
       .input(z.object({ id: z.number(), notes: z.string() }))
       .mutation(async ({ input }) => updateChecklistNotes(input.id, input.notes)),
+  }),
+  // ─── MÓDULO FINANCEIRO ────────────────────────────────────────────────────
+
+  financial: router({
+    // Dashboard / Resumo
+    summary: protectedProcedure
+      .input(z.object({ startDate: z.string().optional(), endDate: z.string().optional() }).optional())
+      .query(async ({ input }) => getFinancialSummary(input)),
+    
+    byProperty: protectedProcedure
+      .query(async () => getFinancialByProperty()),
+    
+    overdue: protectedProcedure
+      .query(async () => getOverdueEntries()),
+
+    // Lançamentos
+    entries: router({
+      list: protectedProcedure
+        .input(z.object({
+          type: z.enum(["entrada", "saida"]).optional(),
+          status: z.string().optional(),
+          propertyId: z.number().optional(),
+          constructionId: z.number().optional(),
+          costCenter: z.string().optional(),
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+        }).optional())
+        .query(async ({ input }) => listFinancialEntries(input)),
+      
+      get: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => getFinancialEntry(input.id)),
+      
+      create: protectedProcedure
+        .input(z.object({
+          type: z.enum(["entrada", "saida"]),
+          category: z.enum(["aluguel", "condominio", "iptu", "venda", "manutencao", "comissao", "taxa_admin", "seguro", "agua", "luz", "gas", "internet", "material", "mao_de_obra", "outros"]),
+          description: z.string().min(1),
+          amount: z.string(),
+          dueDate: z.string(),
+          status: z.enum(["aberto", "pago", "cancelado", "atrasado"]).optional(),
+          propertyId: z.number().nullable().optional(),
+          constructionId: z.number().nullable().optional(),
+          costCenter: z.string().optional(),
+          rentalContractId: z.number().nullable().optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => createFinancialEntry({ ...input, createdBy: ctx.user.id })),
+      
+      update: protectedProcedure
+        .input(z.object({
+          id: z.number(),
+          type: z.enum(["entrada", "saida"]).optional(),
+          category: z.enum(["aluguel", "condominio", "iptu", "venda", "manutencao", "comissao", "taxa_admin", "seguro", "agua", "luz", "gas", "internet", "material", "mao_de_obra", "outros"]).optional(),
+          description: z.string().optional(),
+          amount: z.string().optional(),
+          dueDate: z.string().optional(),
+          paymentDate: z.string().nullable().optional(),
+          status: z.enum(["aberto", "pago", "cancelado", "atrasado"]).optional(),
+          propertyId: z.number().nullable().optional(),
+          constructionId: z.number().nullable().optional(),
+          costCenter: z.string().optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          return updateFinancialEntry(id, data);
+        }),
+      
+      delete: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => deleteFinancialEntry(input.id)),
+      
+      markPaid: protectedProcedure
+        .input(z.object({ id: z.number(), paymentDate: z.string().optional() }))
+        .mutation(async ({ input }) => markEntryAsPaid(input.id, input.paymentDate)),
+      
+      byProperty: protectedProcedure
+        .input(z.object({ propertyId: z.number() }))
+        .query(async ({ input }) => getEntriesByProperty(input.propertyId)),
+    }),
+
+    // Contas Recorrentes
+    recurring: router({
+      list: protectedProcedure
+        .input(z.object({ propertyId: z.number().optional(), isActive: z.boolean().optional() }).optional())
+        .query(async ({ input }) => listRecurringBills(input)),
+      
+      get: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => getRecurringBill(input.id)),
+      
+      create: protectedProcedure
+        .input(z.object({
+          title: z.string().min(1),
+          category: z.enum(["iptu", "condominio", "seguro", "agua", "luz", "gas", "internet", "outros"]),
+          type: z.enum(["entrada", "saida"]).optional(),
+          amount: z.string(),
+          propertyId: z.number().nullable().optional(),
+          costCenter: z.string().optional(),
+          inscricaoImobiliaria: z.string().optional(),
+          frequency: z.enum(["mensal", "bimestral", "trimestral", "semestral", "anual"]).optional(),
+          billingDay: z.number().min(1).max(28).optional(),
+          startDate: z.string(),
+          endDate: z.string().nullable().optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input, ctx }) => createRecurringBill({ ...input, createdBy: ctx.user.id })),
+      
+      update: protectedProcedure
+        .input(z.object({
+          id: z.number(),
+          title: z.string().optional(),
+          amount: z.string().optional(),
+          isActive: z.boolean().optional(),
+          notes: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          return updateRecurringBill(id, data);
+        }),
+      
+      delete: protectedProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => deleteRecurringBill(input.id)),
+      
+      generateIPTU: protectedProcedure
+        .input(z.object({ recurringBillId: z.number(), year: z.number() }))
+        .mutation(async ({ input }) => generateIPTUEntries(input.recurringBillId, input.year)),
+      
+      generateEntries: protectedProcedure
+        .input(z.object({ recurringBillId: z.number(), months: z.number().min(1).max(36).optional() }))
+        .mutation(async ({ input }) => generateRecurringEntries(input.recurringBillId, input.months)),
+    }),
+
+    // Parcelas de Aluguel
+    rentInstallments: router({
+      generate: protectedProcedure
+        .input(z.object({ contractId: z.number(), months: z.number().min(1).max(36).optional() }))
+        .mutation(async ({ input }) => generateRentInstallments(input.contractId, input.months)),
+    }),
+
+    // Conciliação Bancária
+    bank: router({
+      imports: router({
+        list: protectedProcedure.query(async () => listBankImports()),
+        create: protectedProcedure
+          .input(z.object({ fileName: z.string() }))
+          .mutation(async ({ input, ctx }) => createBankImport({ ...input, importedBy: ctx.user.id })),
+      }),
+      
+      transactions: router({
+        list: protectedProcedure
+          .input(z.object({ bankImportId: z.number(), status: z.string().optional() }))
+          .query(async ({ input }) => listBankTransactions(input.bankImportId, input.status)),
+        
+        update: protectedProcedure
+          .input(z.object({
+            id: z.number(),
+            status: z.enum(["pendente", "conciliado", "ignorado", "manual"]).optional(),
+            matchedEntryId: z.number().nullable().optional(),
+            notes: z.string().optional(),
+          }))
+          .mutation(async ({ input }) => {
+            const { id, ...data } = input;
+            return updateBankTransaction(id, data);
+          }),
+        
+        conciliate: protectedProcedure
+          .input(z.object({ transactionId: z.number(), entryId: z.number() }))
+          .mutation(async ({ input }) => conciliateTransaction(input.transactionId, input.entryId)),
+        
+        findCandidates: protectedProcedure
+          .input(z.object({ amount: z.number(), dateStart: z.string(), dateEnd: z.string() }))
+          .query(async ({ input }) => findConciliationCandidates(input.amount, { start: input.dateStart, end: input.dateEnd })),
+      }),
+      
+      // Upload e parse de CSV
+      uploadCSV: protectedProcedure
+        .input(z.object({
+          fileName: z.string(),
+          csvContent: z.string(),
+        }))
+        .mutation(async ({ input, ctx }) => {
+          // Criar registro de importação
+          const importResult = await createBankImport({ fileName: input.fileName, importedBy: ctx.user.id });
+          const importId = importResult.id;
+          
+          // Parse do CSV
+          const lines = input.csvContent.split("\n").filter(l => l.trim());
+          if (lines.length < 2) throw new Error("CSV vazio ou sem dados");
+          
+          // Detectar separador (vírgula ou ponto-e-vírgula)
+          const header = lines[0];
+          const separator = header.includes(";") ? ";" : ",";
+          const headers = header.split(separator).map(h => h.trim().toLowerCase().replace(/"/g, ""));
+          
+          // Mapear colunas (flexível)
+          const dateIdx = headers.findIndex(h => h.includes("data") || h.includes("date"));
+          const descIdx = headers.findIndex(h => h.includes("descri") || h.includes("description") || h.includes("historico") || h.includes("hist"));
+          const valueIdx = headers.findIndex(h => h.includes("valor") || h.includes("value") || h.includes("amount") || h.includes("quantia"));
+          const idIdx = headers.findIndex(h => h.includes("documento") || h.includes("doc") || h.includes("id") || h.includes("transacao") || h.includes("numero"));
+          
+          if (dateIdx === -1 || valueIdx === -1) {
+            throw new Error("CSV deve conter colunas de Data e Valor. Colunas encontradas: " + headers.join(", "));
+          }
+          
+          const transactions: any[] = [];
+          let totalPending = 0;
+          
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(separator).map(c => c.trim().replace(/"/g, ""));
+            if (cols.length < 2) continue;
+            
+            const rawDate = cols[dateIdx] || "";
+            const rawValue = cols[valueIdx] || "0";
+            const rawDesc = descIdx >= 0 ? (cols[descIdx] || "Sem descrição") : "Sem descrição";
+            const rawId = idIdx >= 0 ? (cols[idIdx] || "") : "";
+            
+            // Parse data (DD/MM/YYYY ou YYYY-MM-DD)
+            let parsedDate = rawDate;
+            if (rawDate.includes("/")) {
+              const parts = rawDate.split("/");
+              if (parts.length === 3) {
+                parsedDate = `${parts[2]}-${parts[1].padStart(2, "0")}-${parts[0].padStart(2, "0")}`;
+              }
+            }
+            
+            // Parse valor (aceita vírgula como decimal)
+            const cleanValue = rawValue.replace(/\./g, "").replace(",", ".").replace(/[^\d.-]/g, "");
+            const numValue = parseFloat(cleanValue);
+            if (isNaN(numValue) || numValue === 0) continue;
+            
+            transactions.push({
+              bankImportId: importId,
+              transactionDate: parsedDate,
+              description: rawDesc,
+              amount: String(numValue),
+              transactionId: rawId || null,
+              status: "pendente" as const,
+            });
+            totalPending++;
+          }
+          
+          // Inserir transações em batch
+          if (transactions.length > 0) {
+            await createBankTransactionsBatch(transactions);
+          }
+          
+          // Atualizar contadores da importação
+          await updateBankImport(importId, {
+            totalRows: transactions.length,
+            pendingRows: totalPending,
+          });
+          
+          // Tentar conciliação automática para cada transação
+          const autoMatches: { transactionIdx: number; entryId: number; description: string }[] = [];
+          for (let i = 0; i < transactions.length; i++) {
+            const t = transactions[i];
+            const amount = parseFloat(t.amount);
+            // Buscar candidatos com tolerância de 30 dias
+            const dDate = new Date(t.transactionDate);
+            const start = new Date(dDate); start.setDate(start.getDate() - 15);
+            const end = new Date(dDate); end.setDate(end.getDate() + 15);
+            const candidates = await findConciliationCandidates(
+              amount,
+              { start: start.toISOString().split("T")[0], end: end.toISOString().split("T")[0] }
+            );
+            if (candidates.length === 1) {
+              autoMatches.push({ transactionIdx: i, entryId: candidates[0].id, description: candidates[0].description });
+            }
+          }
+          
+          return {
+            importId,
+            totalRows: transactions.length,
+            autoMatches: autoMatches.length,
+            pendingRows: transactions.length - autoMatches.length,
+          };
+        }),
+    }),
   }),
 });
 export type AppRouter = typeof appRouter;

@@ -601,3 +601,125 @@ export const constructionChecklist = mysqlTable("construction_checklist", {
 
 export type ConstructionChecklistItem = typeof constructionChecklist.$inferSelect;
 export type InsertConstructionChecklistItem = typeof constructionChecklist.$inferInsert;
+
+// ─── MÓDULO FINANCEIRO ──────────────────────────────────────────────────────
+
+// 1. Lançamentos Financeiros (Contas a Pagar e Receber unificados)
+export const financialEntries = mysqlTable("financial_entries", {
+  id: int("id").autoincrement().primaryKey(),
+  // Tipo: entrada (receber) ou saida (pagar)
+  type: mysqlEnum("finType", ["entrada", "saida"]).notNull(),
+  // Categoria
+  category: mysqlEnum("finCategory", [
+    "aluguel", "condominio", "iptu", "venda", "manutencao",
+    "comissao", "taxa_admin", "seguro", "agua", "luz",
+    "gas", "internet", "material", "mao_de_obra", "outros"
+  ]).default("outros").notNull(),
+  // Descrição
+  description: varchar("finDescription", { length: 500 }).notNull(),
+  // Valor (sempre positivo, o tipo define se é entrada ou saída)
+  amount: decimal("finAmount", { precision: 14, scale: 2 }).notNull(),
+  // Datas
+  dueDate: date("finDueDate", { mode: "string" }).notNull(),
+  paymentDate: date("finPaymentDate", { mode: "string" }),
+  // Status
+  status: mysqlEnum("finStatus", ["aberto", "pago", "cancelado", "atrasado"]).default("aberto").notNull(),
+  // Centro de custo (vincula a um imóvel ou "Administração Central")
+  propertyId: int("finPropertyId"),
+  constructionId: int("finConstructionId"),
+  costCenter: varchar("finCostCenter", { length: 255 }).default("administracao_central"),
+  // Vínculo com contrato de locação (para parcelas de aluguel)
+  rentalContractId: int("finRentalContractId"),
+  // Conciliação bancária
+  csvTransactionId: varchar("finCsvTransactionId", { length: 255 }),
+  isConciliated: boolean("finIsConciliated").default(false),
+  conciliationId: int("finConciliationId"),
+  // Recorrência (se veio de conta recorrente)
+  recurringBillId: int("finRecurringBillId"),
+  // Parcela (se veio de cronograma de parcelas)
+  installmentNumber: int("finInstallmentNumber"),
+  totalInstallments: int("finTotalInstallments"),
+  // Multa e juros (para atrasos)
+  lateFee: decimal("finLateFee", { precision: 12, scale: 2 }),
+  interestAmount: decimal("finInterestAmount", { precision: 12, scale: 2 }),
+  // Notas
+  notes: text("finNotes"),
+  createdBy: int("finCreatedBy"),
+  createdAt: timestamp("finCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("finUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type FinancialEntry = typeof financialEntries.$inferSelect;
+export type InsertFinancialEntry = typeof financialEntries.$inferInsert;
+
+// 2. Contas Recorrentes (IPTU, Condomínio, etc.)
+export const recurringBills = mysqlTable("recurring_bills", {
+  id: int("id").autoincrement().primaryKey(),
+  // Descrição
+  title: varchar("rbTitle", { length: 255 }).notNull(),
+  category: mysqlEnum("rbCategory", [
+    "iptu", "condominio", "seguro", "agua", "luz", "gas", "internet", "outros"
+  ]).notNull(),
+  type: mysqlEnum("rbType", ["entrada", "saida"]).default("saida").notNull(),
+  // Valor base
+  amount: decimal("rbAmount", { precision: 14, scale: 2 }).notNull(),
+  // Centro de custo
+  propertyId: int("rbPropertyId"),
+  costCenter: varchar("rbCostCenter", { length: 255 }).default("administracao_central"),
+  // Inscrição imobiliária (para IPTU)
+  inscricaoImobiliaria: varchar("rbInscricao", { length: 50 }),
+  // Recorrência
+  frequency: mysqlEnum("rbFrequency", ["mensal", "bimestral", "trimestral", "semestral", "anual"]).default("mensal").notNull(),
+  billingDay: int("rbBillingDay").default(10),
+  startDate: date("rbStartDate", { mode: "string" }).notNull(),
+  endDate: date("rbEndDate", { mode: "string" }),
+  // Status
+  isActive: boolean("rbIsActive").default(true).notNull(),
+  // Geração automática
+  lastGeneratedDate: date("rbLastGeneratedDate", { mode: "string" }),
+  notes: text("rbNotes"),
+  createdBy: int("rbCreatedBy"),
+  createdAt: timestamp("rbCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("rbUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type RecurringBill = typeof recurringBills.$inferSelect;
+export type InsertRecurringBill = typeof recurringBills.$inferInsert;
+
+// 3. Importações de CSV Bancário (sessões de conciliação)
+export const bankImports = mysqlTable("bank_imports", {
+  id: int("id").autoincrement().primaryKey(),
+  fileName: varchar("biFileName", { length: 255 }).notNull(),
+  importDate: timestamp("biImportDate").defaultNow().notNull(),
+  totalRows: int("biTotalRows").default(0),
+  conciliatedRows: int("biConciliatedRows").default(0),
+  pendingRows: int("biPendingRows").default(0),
+  status: mysqlEnum("biStatus", ["pendente", "parcial", "concluido"]).default("pendente").notNull(),
+  importedBy: int("biImportedBy"),
+  createdAt: timestamp("biCreatedAt").defaultNow().notNull(),
+});
+
+export type BankImport = typeof bankImports.$inferSelect;
+export type InsertBankImport = typeof bankImports.$inferInsert;
+
+// 4. Linhas do CSV (cada transação bancária importada)
+export const bankTransactions = mysqlTable("bank_transactions", {
+  id: int("id").autoincrement().primaryKey(),
+  bankImportId: int("btBankImportId").notNull(),
+  // Dados do CSV
+  transactionDate: date("btTransactionDate", { mode: "string" }).notNull(),
+  description: varchar("btDescription", { length: 500 }).notNull(),
+  amount: decimal("btAmount", { precision: 14, scale: 2 }).notNull(),
+  transactionId: varchar("btTransactionId", { length: 255 }),
+  // Conciliação
+  status: mysqlEnum("btStatus", ["pendente", "conciliado", "ignorado", "manual"]).default("pendente").notNull(),
+  matchedEntryId: int("btMatchedEntryId"),
+  suggestedEntryId: int("btSuggestedEntryId"),
+  suggestedCategory: varchar("btSuggestedCategory", { length: 128 }),
+  // Notas
+  notes: text("btNotes"),
+  createdAt: timestamp("btCreatedAt").defaultNow().notNull(),
+});
+
+export type BankTransaction = typeof bankTransactions.$inferSelect;
+export type InsertBankTransaction = typeof bankTransactions.$inferInsert;
