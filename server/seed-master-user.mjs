@@ -1,40 +1,31 @@
 import bcrypt from "bcryptjs";
-import mysql from "mysql2/promise";
+import postgres from "postgres";
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_URL = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL not set");
+  console.error("SUPABASE_DB_URL or DATABASE_URL not set");
   process.exit(1);
 }
 
 async function seedMasterUser() {
-  const connection = await mysql.createConnection(DATABASE_URL);
+  const sql = postgres(DATABASE_URL, { ssl: 'require' });
 
   try {
     // Check if master user already exists
-    const [existing] = await connection.execute(
-      "SELECT id FROM users WHERE username = ?",
-      ["mauri"]
-    );
+    const existing = await sql`SELECT id FROM users WHERE username = ${'mauri'}`;
 
     if (existing.length > 0) {
       console.log("Master user 'mauri' already exists. Updating password...");
       const hash = await bcrypt.hash("domobianca2025", 10);
-      await connection.execute(
-        "UPDATE users SET passwordHash = ?, role = 'admin', isActive = 1, loginMethod = 'local' WHERE username = ?",
-        [hash, "mauri"]
-      );
+      await sql`UPDATE users SET password_hash = ${hash}, plain_password = ${'domobianca2025'}, role = 'admin', is_active = true, login_method = 'local' WHERE username = ${'mauri'}`;
       console.log("Master user password updated.");
     } else {
       // Create master user
       const hash = await bcrypt.hash("domobianca2025", 10);
       const openId = `local_mauri_${Date.now()}`;
-      await connection.execute(
-        `INSERT INTO users (openId, username, passwordHash, name, email, loginMethod, role, isActive, lastSignedIn)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-        [openId, "mauri", hash, "Mauri Carvalho", "mauri@domobianca.com", "local", "admin", 1]
-      );
+      await sql`INSERT INTO users (open_id, username, password_hash, plain_password, name, email, login_method, role, is_active, last_signed_in)
+         VALUES (${openId}, ${'mauri'}, ${hash}, ${'domobianca2025'}, ${'Mauri Carvalho'}, ${'mauri@domobianca.com'}, ${'local'}, 'admin', true, NOW())`;
       console.log("Master user 'mauri' created successfully!");
     }
 
@@ -47,7 +38,7 @@ async function seedMasterUser() {
     console.error("Error seeding master user:", error);
     throw error;
   } finally {
-    await connection.end();
+    await sql.end();
   }
 }
 

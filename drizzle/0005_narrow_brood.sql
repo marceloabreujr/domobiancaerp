@@ -1,1 +1,0 @@
-ALTER TABLE `rental_contracts` MODIFY COLUMN `leaseTerm` enum('quinzenal','mensal','trimestral','semestral','anual','2_anos','3_anos') NOT NULL DEFAULT 'anual';

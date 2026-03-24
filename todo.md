@@ -339,13 +339,14 @@
 
 ## Migração para Supabase (Independência da Manus)
 
-- [ ] Configurar credenciais Supabase (URL, Anon Key, Service Role Key, Database URL)
-- [ ] Instalar dependências PostgreSQL (pg, drizzle-orm/node-postgres)
-- [ ] Migrar schema de SQLite para PostgreSQL (drizzle-orm/pg)
-- [ ] Migrar storage de Manus S3 para Supabase Storage
-- [ ] Atualizar server/db.ts para usar PostgreSQL
-- [ ] Atualizar server/storage.ts para usar Supabase Storage
-- [ ] Fazer push das tabelas para o Supabase
-- [ ] Criar usuário master (marceloabreu / Ma@468709)
-- [ ] Testar todas as funcionalidades
+- [x] Configurar credenciais Supabase (URL, Anon Key, Service Role Key, Database URL)
+- [x] Instalar dependências PostgreSQL (postgres, drizzle-orm/postgres-js, @supabase/supabase-js)
+- [x] Migrar schema de MySQL para PostgreSQL (drizzle-orm/pg-core)
+- [x] Migrar storage de Manus S3 para Supabase Storage
+- [x] Atualizar server/db.ts para usar PostgreSQL via Session Pooler
+- [x] Atualizar server/storage.ts para usar Supabase Storage
+- [x] Fazer push das 34 tabelas para o Supabase
+- [x] Criar usuário master (mauri / domobianca2025)
+- [x] Popular 12 categorias de suprimentos + 108 itens
+- [x] Testar todas as funcionalidades (233/233 testes passando)
 - [ ] Atualizar repositório GitHub

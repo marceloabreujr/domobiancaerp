@@ -1,5 +1,6 @@
-import { eq, desc, asc, and, lte, gte, sql, like, isNotNull } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { eq, and, desc, asc, sql, like, gte, lte, isNotNull } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser, users, UserRole,
   employees, InsertEmployee,
@@ -22,15 +23,35 @@ import {
   constructionSupplyItems, InsertConstructionSupplyItem,
   supplyFiles, InsertSupplyFile,
   constructionChecklist, InsertConstructionChecklistItem,
+  // Gestão de Imóveis
+  owners, InsertOwner,
+  clients, InsertClient,
+  properties, InsertProperty,
+  rentalContracts, InsertRentalContract,
+  propertyTodos, InsertPropertyTodo,
+  propertyChecklists, InsertPropertyChecklist,
+  // Gestão de Negócios
+  captadores, InsertCaptador,
+  negocios, InsertNegocio,
+  viabilidade, InsertViabilidade,
+  businessTasks, InsertBusinessTask,
+  // Financeiro
+  financialEntries, InsertFinancialEntry,
+  recurringBills, InsertRecurringBill,
+  bankImports, InsertBankImport,
+  bankTransactions, InsertBankTransaction,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!_db) {
+    const connStr = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
+    if (!connStr) { console.warn("[Database] No connection string"); return null; }
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(connStr, { ssl: 'require' });
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -64,7 +85,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     else if (user.openId === ENV.ownerOpenId) { values.role = 'admin'; updateSet.role = 'admin'; }
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
-    await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    await db.insert(users).values(values).onConflictDoUpdate({ target: users.openId, set: updateSet });
   } catch (error) { console.error("[Database] Failed to upsert user:", error); throw error; }
 }
 
@@ -155,8 +176,8 @@ export async function getEmployee(id: number) {
 export async function createEmployee(data: InsertEmployee) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(employees).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(employees).values(data).returning({ id: employees.id });
+  return { id: r[0].id };
 }
 
 export async function updateEmployee(id: number, data: Partial<InsertEmployee>) {
@@ -183,8 +204,8 @@ export async function listTimeOff(employeeId?: number) {
 export async function createTimeOff(data: InsertTimeOff) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(timeOff).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(timeOff).values(data).returning({ id: timeOff.id });
+  return { id: r[0].id };
 }
 
 export async function updateTimeOff(id: number, data: Partial<InsertTimeOff>) {
@@ -211,8 +232,8 @@ export async function listDocuments(category?: string) {
 export async function createDocument(data: InsertDocument) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(documents).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(documents).values(data).returning({ id: documents.id });
+  return { id: r[0].id };
 }
 
 export async function updateDocument(id: number, data: Partial<InsertDocument>) {
@@ -251,8 +272,8 @@ export async function listCalendarEvents() {
 export async function createCalendarEvent(data: InsertCalendarEvent) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(calendarEvents).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(calendarEvents).values(data).returning({ id: calendarEvents.id });
+  return { id: r[0].id };
 }
 
 export async function updateCalendarEvent(id: number, data: Partial<InsertCalendarEvent>) {
@@ -278,8 +299,8 @@ export async function listSupplies() {
 export async function createSupply(data: InsertSupply) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(supplies).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(supplies).values(data).returning({ id: supplies.id });
+  return { id: r[0].id };
 }
 
 export async function updateSupply(id: number, data: Partial<InsertSupply>) {
@@ -305,8 +326,8 @@ export async function listFleet() {
 export async function createFleetVehicle(data: InsertFleetVehicle) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(fleet).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(fleet).values(data).returning({ id: fleet.id });
+  return { id: r[0].id };
 }
 
 export async function updateFleetVehicle(id: number, data: Partial<InsertFleetVehicle>) {
@@ -332,8 +353,8 @@ export async function listPettyCash() {
 export async function createPettyCashEntry(data: InsertPettyCashEntry) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(pettyCash).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(pettyCash).values(data).returning({ id: pettyCash.id });
+  return { id: r[0].id };
 }
 
 export async function deletePettyCashEntry(id: number) {
@@ -369,8 +390,8 @@ export async function listTickets(status?: string) {
 export async function createTicket(data: InsertTicket) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(tickets).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(tickets).values(data).returning({ id: tickets.id });
+  return { id: r[0].id };
 }
 
 export async function updateTicket(id: number, data: Partial<InsertTicket>) {
@@ -386,15 +407,6 @@ export async function deleteTicket(id: number) {
 }
 
 // ─── MÓDULO GESTÃO DE IMÓVEIS ──────────────────────────────────────────────
-
-import {
-  owners, InsertOwner,
-  clients, InsertClient,
-  properties, InsertProperty,
-  rentalContracts, InsertRentalContract,
-  propertyTodos, InsertPropertyTodo,
-  propertyChecklists, InsertPropertyChecklist,
-} from "../drizzle/schema";
 
 // ─── OWNERS (Proprietários) ────────────────────────────────────────────────
 
@@ -414,8 +426,8 @@ export async function getOwner(id: number) {
 export async function createOwner(data: InsertOwner) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(owners).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(owners).values(data).returning({ id: owners.id });
+  return { id: r[0].id };
 }
 
 export async function updateOwner(id: number, data: Partial<InsertOwner>) {
@@ -448,8 +460,8 @@ export async function getClient(id: number) {
 export async function createClient(data: InsertClient) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(clients).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(clients).values(data).returning({ id: clients.id });
+  return { id: r[0].id };
 }
 
 export async function updateClient(id: number, data: Partial<InsertClient>) {
@@ -500,8 +512,8 @@ export async function getNextPropertyCode(type: "locacao" | "venda") {
 export async function createProperty(data: InsertProperty) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(properties).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(properties).values(data).returning({ id: properties.id });
+  return { id: r[0].id };
 }
 
 export async function updateProperty(id: number, data: Partial<InsertProperty>) {
@@ -550,8 +562,8 @@ export async function getRentalContract(id: number) {
 export async function createRentalContract(data: InsertRentalContract) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(rentalContracts).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(rentalContracts).values(data).returning({ id: rentalContracts.id });
+  return { id: r[0].id };
 }
 
 export async function updateRentalContract(id: number, data: Partial<InsertRentalContract>) {
@@ -569,14 +581,12 @@ export async function deleteRentalContract(id: number) {
 export async function getUpcomingRentAlerts(daysAhead: number = 7) {
   const db = await getDb();
   if (!db) return [];
-  // Get active contracts and calculate next billing date
   const activeContracts = await db.select().from(rentalContracts).where(eq(rentalContracts.status, "ativo"));
   const today = new Date();
   const alerts: Array<{ contractId: number; propertyId: number; tenantId: number; billingDay: number; rentAmount: string; daysUntilDue: number; type: string }> = [];
 
   for (const contract of activeContracts) {
     const billingDay = contract.billingDay || 10;
-    // Calculate next billing date
     let nextBilling = new Date(today.getFullYear(), today.getMonth(), billingDay);
     if (nextBilling <= today) nextBilling.setMonth(nextBilling.getMonth() + 1);
     const diffDays = Math.ceil((nextBilling.getTime() - today.getTime()) / 86400000);
@@ -593,7 +603,6 @@ export async function getUpcomingRentAlerts(daysAhead: number = 7) {
       });
     }
 
-    // Check contract anniversary (reajuste)
     if (contract.startDate) {
       const start = new Date(contract.startDate);
       let nextAnniversary = new Date(start);
@@ -615,7 +624,6 @@ export async function getUpcomingRentAlerts(daysAhead: number = 7) {
   return alerts;
 }
 
-// Resumo financeiro de imóveis
 export async function getPropertyFinancialSummary() {
   const db = await getDb();
   if (!db) return { totalRentIncome: 0, totalCondoIncome: 0, totalAdminFees: 0, activeContracts: 0 };
@@ -632,7 +640,6 @@ export async function getPropertyFinancialSummary() {
       const prop = allProps.find(p => p.id === c.propertyId);
       if (prop) totalCondoIncome += parseFloat(prop.condoFee as string || "0");
     }
-    // Admin fee for third-party properties
     const prop = allProps.find(p => p.id === c.propertyId);
     if (prop && prop.ownership === "terceiros" && prop.adminFeePercent) {
       totalAdminFees += parseFloat(c.rentAmount || "0") * parseFloat(prop.adminFeePercent as string || "0") / 100;
@@ -654,8 +661,8 @@ export async function listPropertyTodos(propertyId?: number) {
 export async function createPropertyTodo(data: InsertPropertyTodo) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(propertyTodos).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(propertyTodos).values(data).returning({ id: propertyTodos.id });
+  return { id: r[0].id };
 }
 
 export async function updatePropertyTodo(id: number, data: Partial<InsertPropertyTodo>) {
@@ -683,8 +690,8 @@ export async function listPropertyChecklists(propertyId: number, month: number, 
 export async function createPropertyChecklist(data: InsertPropertyChecklist) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(propertyChecklists).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(propertyChecklists).values(data).returning({ id: propertyChecklists.id });
+  return { id: r[0].id };
 }
 
 export async function updatePropertyChecklist(id: number, data: Partial<InsertPropertyChecklist>) {
@@ -700,13 +707,6 @@ export async function deletePropertyChecklist(id: number) {
 }
 
 // ─── MÓDULO GESTÃO DE NEGÓCIOS ──────────────────────────────────────────────
-
-import {
-  captadores, InsertCaptador,
-  negocios, InsertNegocio,
-  viabilidade, InsertViabilidade,
-  businessTasks, InsertBusinessTask,
-} from "../drizzle/schema";
 
 // ─── CAPTADORES ────────────────────────────────────────────────────────────
 
@@ -726,8 +726,8 @@ export async function getCaptador(id: number) {
 export async function createCaptador(data: InsertCaptador) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(captadores).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(captadores).values(data).returning({ id: captadores.id });
+  return { id: r[0].id };
 }
 
 export async function updateCaptador(id: number, data: Partial<InsertCaptador>) {
@@ -776,10 +776,9 @@ export async function getNegocio(id: number) {
 export async function createNegocio(data: InsertNegocio) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(negocios).values(data);
-  const negocioId = r[0].insertId;
+  const r = await db.insert(negocios).values(data).returning({ id: negocios.id });
+  const negocioId = r[0].id;
 
-  // Auto-create task from nextAction if provided
   if (data.nextAction && data.nextActionDate) {
     await db.insert(businessTasks).values({
       negocioId,
@@ -797,7 +796,6 @@ export async function updateNegocio(id: number, data: Partial<InsertNegocio>) {
   if (!db) throw new Error("DB not available");
   await db.update(negocios).set(data).where(eq(negocios.id, id));
 
-  // Auto-create task if nextAction changed
   if (data.nextAction && data.nextActionDate) {
     await db.insert(businessTasks).values({
       negocioId: id,
@@ -811,7 +809,6 @@ export async function updateNegocio(id: number, data: Partial<InsertNegocio>) {
 export async function deleteNegocio(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  // Delete related viabilidade and tasks
   await db.delete(viabilidade).where(eq(viabilidade.negocioId, id));
   await db.delete(businessTasks).where(eq(businessTasks.negocioId, id));
   await db.delete(negocios).where(eq(negocios.id, id));
@@ -842,7 +839,6 @@ export async function upsertViabilidade(negocioId: number, data: Partial<InsertV
   const db = await getDb();
   if (!db) throw new Error("DB not available");
 
-  // Calculate outputs
   const landCost = parseFloat(data.landCost as string || "0");
   const constructionCost = parseFloat(data.constructionCost as string || "0");
   const indirectCosts = parseFloat(data.indirectCosts as string || "0");
@@ -850,17 +846,14 @@ export async function upsertViabilidade(negocioId: number, data: Partial<InsertV
   const commissions = parseFloat(data.commissions as string || "0");
   const totalCost = landCost + constructionCost + indirectCosts + taxes + commissions;
 
-  // Get VGV from the deal
   const deal = await db.select().from(negocios).where(eq(negocios.id, negocioId)).limit(1);
   const vgv = deal.length > 0 ? parseFloat(deal[0].estimatedVGV as string || "0") : 0;
 
   const netProfit = vgv - totalCost;
   const profitMargin = vgv > 0 ? (netProfit / vgv) * 100 : 0;
   const roi = totalCost > 0 ? (netProfit / totalCost) * 100 : 0;
-  // Simplified TIR (assume 1 year project)
   const tir = totalCost > 0 ? ((vgv / totalCost) - 1) * 100 : 0;
 
-  // Determine viability status (traffic light)
   let viabilityStatus: "verde" | "amarelo" | "vermelho" = "amarelo";
   if (profitMargin >= 20 && roi >= 30) viabilityStatus = "verde";
   else if (profitMargin < 10 || roi < 10) viabilityStatus = "vermelho";
@@ -886,8 +879,8 @@ export async function upsertViabilidade(negocioId: number, data: Partial<InsertV
     await db.update(viabilidade).set(values).where(eq(viabilidade.negocioId, negocioId));
     return { id: existing[0].id, ...values };
   } else {
-    const r = await db.insert(viabilidade).values(values as any);
-    return { id: r[0].insertId, ...values };
+    const r = await db.insert(viabilidade).values(values as any).returning({ id: viabilidade.id });
+    return { id: r[0].id, ...values };
   }
 }
 
@@ -906,8 +899,8 @@ export async function listBusinessTasks(filters?: { isCompleted?: boolean; isUrg
 export async function createBusinessTask(data: InsertBusinessTask) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(businessTasks).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(businessTasks).values(data).returning({ id: businessTasks.id });
+  return { id: r[0].id };
 }
 
 export async function updateBusinessTask(id: number, data: Partial<InsertBusinessTask>) {
@@ -943,8 +936,8 @@ export async function getContractorById(id: number) {
 export async function createContractor(data: InsertContractor) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(contractors).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(contractors).values(data).returning({ id: contractors.id });
+  return { id: result[0].id };
 }
 
 export async function updateContractor(id: number, data: Partial<InsertContractor>) {
@@ -976,8 +969,8 @@ export async function getArchitectById(id: number) {
 export async function createArchitect(data: InsertArchitect) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(architects).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(architects).values(data).returning({ id: architects.id });
+  return { id: result[0].id };
 }
 
 export async function updateArchitect(id: number, data: Partial<InsertArchitect>) {
@@ -1009,8 +1002,8 @@ export async function getConstructionById(id: number) {
 export async function createConstruction(data: InsertConstruction) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(constructions).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(constructions).values(data).returning({ id: constructions.id });
+  return { id: result[0].id };
 }
 
 export async function updateConstruction(id: number, data: Partial<InsertConstruction>) {
@@ -1052,8 +1045,8 @@ export async function listAllReports() {
 export async function createReport(data: InsertConstructionReport) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(constructionReports).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(constructionReports).values(data).returning({ id: constructionReports.id });
+  return { id: result[0].id };
 }
 
 export async function deleteReport(id: number) {
@@ -1078,8 +1071,8 @@ export async function listAllImages() {
 export async function createImage(data: InsertConstructionImage) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(constructionImages).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(constructionImages).values(data).returning({ id: constructionImages.id });
+  return { id: result[0].id };
 }
 
 export async function deleteImage(id: number) {
@@ -1101,8 +1094,8 @@ export async function listConstructionTasks(constructionId?: number) {
 export async function createConstructionTask(data: InsertConstructionTask) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const result = await db.insert(constructionTasks).values(data);
-  return { id: result[0].insertId };
+  const result = await db.insert(constructionTasks).values(data).returning({ id: constructionTasks.id });
+  return { id: result[0].id };
 }
 
 export async function updateConstructionTask(id: number, data: Partial<InsertConstructionTask>) {
@@ -1119,7 +1112,6 @@ export async function deleteConstructionTask(id: number) {
 
 // ─── SUPRIMENTOS E CHECKLIST ────────────────────────────────────────────────
 
-// Categorias e itens base
 export async function getSupplyCategories() {
   const db = await getDb();
   if (!db) return [];
@@ -1152,7 +1144,6 @@ export async function searchSupplyItems(query: string) {
   return results;
 }
 
-// Itens de obra (vínculo item + obra)
 export async function getConstructionSupplyItems(constructionId: number, categoryId?: number) {
   const db = await getDb();
   if (!db) return [];
@@ -1164,7 +1155,7 @@ export async function getConstructionSupplyItems(constructionId: number, categor
 export async function createConstructionSupplyItem(data: InsertConstructionSupplyItem) {
   const db = await getDb();
   if (!db) return null;
-  const [result] = await db.insert(constructionSupplyItems).values(data).$returningId();
+  const [result] = await db.insert(constructionSupplyItems).values(data).returning({ id: constructionSupplyItems.id });
   return result;
 }
 
@@ -1180,7 +1171,6 @@ export async function deleteConstructionSupplyItem(id: number) {
   await db.delete(constructionSupplyItems).where(eq(constructionSupplyItems.id, id));
 }
 
-// Histórico de preços — último valor fechado para um item em qualquer obra
 export async function getLastClosedValue(supplyItemId: number, excludeConstructionId?: number) {
   const db = await getDb();
   if (!db) return null;
@@ -1199,7 +1189,6 @@ export async function getLastClosedValue(supplyItemId: number, excludeConstructi
   
   if (results.length === 0) return null;
   
-  // Get construction title
   const construction = await db.select({ title: constructions.title })
     .from(constructions)
     .where(eq(constructions.id, results[0].constructionId))
@@ -1212,7 +1201,6 @@ export async function getLastClosedValue(supplyItemId: number, excludeConstructi
   };
 }
 
-// Arquivos de orçamento
 export async function getSupplyFiles(constructionId: number, categoryId?: number) {
   const db = await getDb();
   if (!db) return [];
@@ -1224,7 +1212,7 @@ export async function getSupplyFiles(constructionId: number, categoryId?: number
 export async function createSupplyFile(data: InsertSupplyFile) {
   const db = await getDb();
   if (!db) return null;
-  const [result] = await db.insert(supplyFiles).values(data).$returningId();
+  const [result] = await db.insert(supplyFiles).values(data).returning({ id: supplyFiles.id });
   return result;
 }
 
@@ -1234,7 +1222,6 @@ export async function deleteSupplyFile(id: number) {
   await db.delete(supplyFiles).where(eq(supplyFiles.id, id));
 }
 
-// Checklist de ação da obra
 export async function getConstructionChecklist(constructionId: number) {
   const db = await getDb();
   if (!db) return [];
@@ -1245,18 +1232,15 @@ export async function initializeChecklist(constructionId: number) {
   const db = await getDb();
   if (!db) return;
   
-  // Check if already initialized
   const existing = await db.select({ id: constructionChecklist.id })
     .from(constructionChecklist)
     .where(eq(constructionChecklist.constructionId, constructionId))
     .limit(1);
   
-  if (existing.length > 0) return; // Already initialized
+  if (existing.length > 0) return;
   
-  // Get all items
   const allItems = await db.select().from(supplyItems);
   
-  // Create checklist entries for all items
   const entries = allItems.map(item => ({
     constructionId,
     categoryId: item.categoryId,
@@ -1286,13 +1270,6 @@ export async function updateChecklistNotes(id: number, notes: string) {
 }
 
 // ─── MÓDULO FINANCEIRO ──────────────────────────────────────────────────────
-
-import {
-  financialEntries, InsertFinancialEntry,
-  recurringBills, InsertRecurringBill,
-  bankImports, InsertBankImport,
-  bankTransactions, InsertBankTransaction,
-} from "../drizzle/schema";
 
 // ─── FINANCIAL ENTRIES (Lançamentos) ────────────────────────────────────────
 
@@ -1331,8 +1308,8 @@ export async function getFinancialEntry(id: number) {
 export async function createFinancialEntry(data: InsertFinancialEntry) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(financialEntries).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(financialEntries).values(data).returning({ id: financialEntries.id });
+  return { id: r[0].id };
 }
 
 export async function updateFinancialEntry(id: number, data: Partial<InsertFinancialEntry>) {
@@ -1433,8 +1410,8 @@ export async function getRecurringBill(id: number) {
 export async function createRecurringBill(data: InsertRecurringBill) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(recurringBills).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(recurringBills).values(data).returning({ id: recurringBills.id });
+  return { id: r[0].id };
 }
 
 export async function updateRecurringBill(id: number, data: Partial<InsertRecurringBill>) {
@@ -1449,7 +1426,6 @@ export async function deleteRecurringBill(id: number) {
   await db.delete(recurringBills).where(eq(recurringBills.id, id));
 }
 
-// Gerar lançamentos de IPTU (12 parcelas do ano)
 export async function generateIPTUEntries(recurringBillId: number, year: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -1477,12 +1453,10 @@ export async function generateIPTUEntries(recurringBillId: number, year: number)
   if (entries.length > 0) {
     await db.insert(financialEntries).values(entries);
   }
-  // Atualizar última data de geração
   await db.update(recurringBills).set({ lastGeneratedDate: `${year}-12-31` }).where(eq(recurringBills.id, recurringBillId));
   return { generated: entries.length };
 }
 
-// Gerar lançamentos mensais de conta recorrente
 export async function generateRecurringEntries(recurringBillId: number, months: number = 12) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -1521,7 +1495,6 @@ export async function generateRecurringEntries(recurringBillId: number, months: 
   return { generated: entries.length };
 }
 
-// Gerar parcelas de aluguel a partir de contrato de locação
 export async function generateRentInstallments(contractId: number, months: number = 12) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -1577,8 +1550,8 @@ export async function listBankImports() {
 export async function createBankImport(data: InsertBankImport) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(bankImports).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(bankImports).values(data).returning({ id: bankImports.id });
+  return { id: r[0].id };
 }
 
 export async function updateBankImport(id: number, data: Partial<InsertBankImport>) {
@@ -1600,8 +1573,8 @@ export async function listBankTransactions(bankImportId: number, status?: string
 export async function createBankTransaction(data: InsertBankTransaction) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  const r = await db.insert(bankTransactions).values(data);
-  return { id: r[0].insertId };
+  const r = await db.insert(bankTransactions).values(data).returning({ id: bankTransactions.id });
+  return { id: r[0].id };
 }
 
 export async function createBankTransactionsBatch(data: InsertBankTransaction[]) {
@@ -1617,16 +1590,13 @@ export async function updateBankTransaction(id: number, data: Partial<InsertBank
   await db.update(bankTransactions).set(data).where(eq(bankTransactions.id, id));
 }
 
-// Conciliar transação bancária com lançamento financeiro
 export async function conciliateTransaction(transactionId: number, entryId: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
-  // Marcar transação como conciliada
   await db.update(bankTransactions).set({
     status: "conciliado",
     matchedEntryId: entryId,
   }).where(eq(bankTransactions.id, transactionId));
-  // Marcar lançamento como conciliado e pago
   await db.update(financialEntries).set({
     isConciliated: true,
     status: "pago",
@@ -1634,13 +1604,12 @@ export async function conciliateTransaction(transactionId: number, entryId: numb
   }).where(eq(financialEntries.id, entryId));
 }
 
-// Buscar lançamentos candidatos para conciliação automática
 export async function findConciliationCandidates(amount: number, dateRange: { start: string; end: string }) {
   const db = await getDb();
   if (!db) return [];
   const isPositive = amount > 0;
   const absAmount = Math.abs(amount);
-  const tolerance = absAmount * 0.02; // 2% de tolerância
+  const tolerance = absAmount * 0.02;
   
   return db.select().from(financialEntries).where(
     and(
@@ -1649,12 +1618,11 @@ export async function findConciliationCandidates(amount: number, dateRange: { st
       eq(financialEntries.isConciliated, false),
       gte(financialEntries.dueDate, dateRange.start),
       lte(financialEntries.dueDate, dateRange.end),
-      sql`ABS(${financialEntries.amount} - ${absAmount}) <= ${tolerance}`
+      sql`ABS(${financialEntries.amount}::numeric - ${absAmount}) <= ${tolerance}`
     )
   ).orderBy(asc(financialEntries.dueDate)).limit(5);
 }
 
-// Resumo por centro de custo
 export async function getFinancialByProperty() {
   const db = await getDb();
   if (!db) return [];

@@ -1,17 +1,15 @@
-// Seed script for supply categories and items
+// Seed script for supply categories and items (PostgreSQL/Supabase)
 // Run: node server/seed-supplies.mjs
 
-import { drizzle } from "drizzle-orm/mysql2";
-import mysql from "mysql2/promise";
+import postgres from "postgres";
 
-const DATABASE_URL = process.env.DATABASE_URL;
+const DATABASE_URL = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL not set");
+  console.error("SUPABASE_DB_URL or DATABASE_URL not set");
   process.exit(1);
 }
 
-const connection = await mysql.createConnection(DATABASE_URL);
-const db = drizzle(connection);
+const sql = postgres(DATABASE_URL, { ssl: 'require' });
 
 const categories = [
   {
@@ -134,40 +132,28 @@ console.log("Seeding supply categories and items...");
 
 for (const cat of categories) {
   // Check if category already exists
-  const [existing] = await connection.execute(
-    "SELECT id FROM supply_categories WHERE scCode = ?",
-    [cat.code]
-  );
+  const existing = await sql`SELECT id FROM supply_categories WHERE code = ${cat.code}`;
   
   let categoryId;
   if (existing.length > 0) {
     categoryId = existing[0].id;
     console.log(`Category ${cat.code} already exists (id: ${categoryId})`);
   } else {
-    const [result] = await connection.execute(
-      "INSERT INTO supply_categories (scCode, scName) VALUES (?, ?)",
-      [cat.code, cat.name]
-    );
-    categoryId = result.insertId;
+    const [result] = await sql`INSERT INTO supply_categories (code, name) VALUES (${cat.code}, ${cat.name}) RETURNING id`;
+    categoryId = result.id;
     console.log(`Created category ${cat.code}: ${cat.name} (id: ${categoryId})`);
   }
 
   for (const itemName of cat.items) {
-    const [existingItem] = await connection.execute(
-      "SELECT id FROM supply_items WHERE siCategoryId = ? AND siName = ?",
-      [categoryId, itemName]
-    );
+    const existingItem = await sql`SELECT id FROM supply_items WHERE category_id = ${categoryId} AND name = ${itemName}`;
     
     if (existingItem.length === 0) {
-      await connection.execute(
-        "INSERT INTO supply_items (siCategoryId, siName) VALUES (?, ?)",
-        [categoryId, itemName]
-      );
+      await sql`INSERT INTO supply_items (category_id, name) VALUES (${categoryId}, ${itemName})`;
     }
   }
   console.log(`  → ${cat.items.length} items for ${cat.name}`);
 }
 
 console.log("Seed complete!");
-await connection.end();
+await sql.end();
 process.exit(0);
