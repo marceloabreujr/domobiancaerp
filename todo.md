@@ -202,3 +202,9 @@
 
 ## Melhorias
 - [x] Upload de PDF do contrato assinado no módulo Gestão de Imóveis (contratos de locação)
+
+## Renomeações e Remoções
+- [x] Renomear "Gestão de Obras" → "Obras"
+- [x] Renomear "Gestão de Imóveis" → "Imóveis"
+- [x] Renomear "Gestão de Negócios" → "Novas Oportunidades"
+- [x] Remover módulo Suprimentos (sidebar, painel, rotas)

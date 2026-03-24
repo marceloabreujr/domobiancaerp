@@ -29,7 +29,6 @@ import {
   HardHat,
   LayoutDashboard,
   LogOut,
-  Package,
   PanelLeft,
   Settings,
   Wallet,
@@ -55,10 +54,9 @@ const menuItems = [
   { icon: LayoutDashboard, label: "Painel", path: "/" },
   { icon: Wallet, label: "Financeiro", path: "/financeiro" },
   { icon: ClipboardList, label: "Administrativo", path: "/administrativo" },
-  { icon: HardHat, label: "Gestão de Obras", path: "/obras" },
-  { icon: Building2, label: "Gestão de Imóveis", path: "/imoveis" },
-  { icon: Package, label: "Suprimentos", path: "/suprimentos" },
-  { icon: Briefcase, label: "Gestão de Negócios", path: "/negocios" },
+  { icon: HardHat, label: "Obras", path: "/obras" },
+  { icon: Building2, label: "Imóveis", path: "/imoveis" },
+  { icon: Briefcase, label: "Novas Oportunidades", path: "/negocios" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";

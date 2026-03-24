@@ -9,7 +9,6 @@ import Financeiro from "./pages/Financeiro";
 import AdminLayout from "./pages/admin/AdminLayout";
 import ObrasLayout from "./pages/obras/ObrasLayout";
 import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
-import Suprimentos from "./pages/Suprimentos";
 import NegociosLayout from "./pages/negocios/NegociosLayout";
 import Configuracoes from "./pages/Configuracoes";
 
@@ -21,7 +20,6 @@ function Router() {
       <Route path="/administrativo" component={AdminLayout} />
       <Route path="/obras" component={ObrasLayout} />
       <Route path="/imoveis" component={ImoveisLayout} />
-      <Route path="/suprimentos" component={Suprimentos} />
       <Route path="/negocios/:rest*" component={NegociosLayout} />
       <Route path="/negocios" component={NegociosLayout} />
       <Route path="/configuracoes" component={Configuracoes} />

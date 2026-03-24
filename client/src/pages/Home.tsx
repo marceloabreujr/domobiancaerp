@@ -5,7 +5,6 @@ import {
   Building2,
   ClipboardList,
   HardHat,
-  Package,
   Wallet,
 } from "lucide-react";
 import { useLocation } from "wouter";
@@ -27,28 +26,21 @@ const modules = [
   },
   {
     icon: HardHat,
-    label: "Gestão de Obras",
+    label: "Obras",
     description: "Cadastro, tarefas e relatórios",
     path: "/obras",
     color: "bg-amber-500/10 text-amber-600",
   },
   {
     icon: Building2,
-    label: "Gestão de Imóveis",
+    label: "Imóveis",
     description: "Imóveis, contratos e locatários",
     path: "/imoveis",
     color: "bg-violet-500/10 text-violet-600",
   },
   {
-    icon: Package,
-    label: "Suprimentos",
-    description: "Pedidos, fornecedores e materiais",
-    path: "/suprimentos",
-    color: "bg-orange-500/10 text-orange-600",
-  },
-  {
     icon: Briefcase,
-    label: "Gestão de Negócios",
+    label: "Novas Oportunidades",
     description: "Pipeline, clientes e captadores",
     path: "/negocios",
     color: "bg-pink-500/10 text-pink-600",
