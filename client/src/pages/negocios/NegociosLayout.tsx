@@ -9,7 +9,7 @@ import CaptadoresPage from "./CaptadoresPage";
 import CalendarioTarefasPage from "./CalendarioTarefasPage";
 import TarefasUrgentesPage from "./TarefasUrgentesPage";
 
-const sidebarItems = [
+const navItems = [
   { label: "Novo Negócio", href: "/negocios/novo", icon: Plus },
   { label: "Negócios Ativos", href: "/negocios", icon: Briefcase },
   { label: "Arquivados", href: "/negocios/arquivados", icon: Archive },
@@ -39,38 +39,16 @@ export default function NegociosLayout() {
 
   return (
     <DashboardLayout>
-      <div className="flex h-full">
-        {/* Sidebar interna */}
-        <aside className="w-56 shrink-0 border-r border-border bg-muted/30 p-3 space-y-1 hidden md:block">
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider px-2 mb-3">
+      <div className="flex flex-col h-full">
+        {/* Header do módulo */}
+        <div className="border-b border-border bg-background px-4 pt-4 pb-0">
+          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+            <Briefcase className="h-5 w-5" />
             Gestão de Negócios
-          </h3>
-          {sidebarItems.map((item) => {
-            const isActive =
-              item.href === "/negocios"
-                ? location === "/negocios"
-                : location.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-colors ${
-                  isActive
-                    ? "bg-primary text-primary-foreground font-medium"
-                    : "text-foreground hover:bg-muted"
-                }`}
-              >
-                <item.icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </aside>
-
-        {/* Mobile nav */}
-        <div className="md:hidden w-full border-b border-border bg-muted/30 px-3 py-2 overflow-x-auto">
-          <div className="flex gap-1">
-            {sidebarItems.map((item) => {
+          </h2>
+          {/* Navegação por abas */}
+          <nav className="flex gap-1 overflow-x-auto pb-0">
+            {navItems.map((item) => {
               const isActive =
                 item.href === "/negocios"
                   ? location === "/negocios"
@@ -79,22 +57,22 @@ export default function NegociosLayout() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-md text-xs whitespace-nowrap transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-2 text-sm whitespace-nowrap border-b-2 transition-colors ${
                     isActive
-                      ? "bg-primary text-primary-foreground font-medium"
-                      : "text-foreground hover:bg-muted"
+                      ? "border-primary text-primary font-medium"
+                      : "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30"
                   }`}
                 >
-                  <item.icon className="h-3 w-3" />
+                  <item.icon className="h-4 w-4" />
                   {item.label}
                 </Link>
               );
             })}
-          </div>
+          </nav>
         </div>
 
         {/* Conteúdo principal */}
-        <main className="flex-1 p-6 overflow-auto">
+        <main className="flex-1 p-4 md:p-6 overflow-auto">
           <Switch>
             <Route path="/negocios/novo" component={NovoNegocioPage} />
             <Route path="/negocios/arquivados">{() => <NegociosListPage archived={true} />}</Route>

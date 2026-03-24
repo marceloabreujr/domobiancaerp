@@ -165,3 +165,7 @@
 - [x] Testes de validação de input (campos obrigatórios)
 - [x] Testes de controle de acesso por role
 - [x] Total: 89 testes passando (4 arquivos)
+
+## Bug Fixes
+- [x] Corrigir layout responsivo do NegociosLayout (formulário não visível em telas menores)
+- [x] Corrigir layout responsivo do ImoveisLayout (mesmo problema)
