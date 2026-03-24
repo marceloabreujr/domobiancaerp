@@ -31,6 +31,7 @@ import {
   LogOut,
   PanelLeft,
   Settings,
+  ShieldCheck,
   Wallet,
 } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
@@ -237,9 +238,20 @@ function DashboardLayoutContent({
               })}
             </SidebarMenu>
 
-            {/* Separador + link de configurações (apenas admin) */}
+            {/* Separador + links admin (apenas admin) */}
             {userRole === "admin" && (
               <SidebarMenu className="mt-auto pt-4 border-t border-sidebar-border">
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={location.startsWith("/adm-erp")}
+                    onClick={() => setLocation("/adm-erp")}
+                    tooltip="ADM ERP"
+                    className="h-10 transition-all font-normal"
+                  >
+                    <ShieldCheck className="h-4 w-4 text-red-500" />
+                    <span>ADM ERP</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={location.startsWith("/configuracoes")}

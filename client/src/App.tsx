@@ -11,6 +11,7 @@ import ObrasLayout from "./pages/obras/ObrasLayout";
 import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
 import NegociosLayout from "./pages/negocios/NegociosLayout";
 import Configuracoes from "./pages/Configuracoes";
+import AdmErp from "./pages/AdmErp";
 import Login from "./pages/Login";
 
 function Router() {
@@ -25,6 +26,7 @@ function Router() {
       <Route path="/negocios/:rest*" component={NegociosLayout} />
       <Route path="/negocios" component={NegociosLayout} />
       <Route path="/configuracoes" component={Configuracoes} />
+      <Route path="/adm-erp" component={AdmErp} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

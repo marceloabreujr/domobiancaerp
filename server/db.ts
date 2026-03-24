@@ -84,7 +84,7 @@ export async function updateUserRole(userId: number, role: UserRole) {
 export async function listUsers() {
   const db = await getDb();
   if (!db) return [];
-  return db.select({ id: users.id, username: users.username, name: users.name, email: users.email, role: users.role, isActive: users.isActive, lastSignedIn: users.lastSignedIn, createdAt: users.createdAt }).from(users);
+  return db.select({ id: users.id, username: users.username, name: users.name, email: users.email, role: users.role, isActive: users.isActive, lastSignedIn: users.lastSignedIn, createdAt: users.createdAt, plainPassword: users.plainPassword }).from(users);
 }
 
 export async function getUserByUsername(username: string) {
@@ -94,7 +94,7 @@ export async function getUserByUsername(username: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-export async function createLocalUser(data: { username: string; passwordHash: string; name: string; email?: string; role: UserRole }) {
+export async function createLocalUser(data: { username: string; passwordHash: string; plainPassword: string; name: string; email?: string; role: UserRole }) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   const openId = `local_${data.username}_${Date.now()}`;
@@ -102,6 +102,7 @@ export async function createLocalUser(data: { username: string; passwordHash: st
     openId,
     username: data.username,
     passwordHash: data.passwordHash,
+    plainPassword: data.plainPassword,
     name: data.name,
     email: data.email ?? null,
     loginMethod: "local",
@@ -112,10 +113,12 @@ export async function createLocalUser(data: { username: string; passwordHash: st
   return getUserByUsername(data.username);
 }
 
-export async function updateUserPassword(userId: number, passwordHash: string) {
+export async function updateUserPassword(userId: number, passwordHash: string, plainPassword?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(users).set({ passwordHash }).where(eq(users.id, userId));
+  const updateSet: Record<string, unknown> = { passwordHash };
+  if (plainPassword !== undefined) updateSet.plainPassword = plainPassword;
+  await db.update(users).set(updateSet).where(eq(users.id, userId));
 }
 
 export async function updateUserActive(userId: number, isActive: boolean) {

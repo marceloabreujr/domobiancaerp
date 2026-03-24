@@ -295,9 +295,9 @@ describe("Login com DB - Funcionalidade", () => {
     const ctx = createAnonContext();
     const caller = appRouter.createCaller(ctx);
     try {
-      const result = await caller.auth.login({ username: "mauri", password: "domobianca2025" });
+      const result = await caller.auth.login({ username: "marceloabreu", password: "Ma@468709" });
       expect(result.success).toBe(true);
-      expect(result.user.name).toBe("Mauri Carvalho");
+      expect(result.user.name).toBe("Marcelo Abreu");
       expect(result.user.role).toBe("admin");
     } catch (e: any) {
       // DB may not be available in test env

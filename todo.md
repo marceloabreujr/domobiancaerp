@@ -305,3 +305,28 @@
 - [x] Testes de validação de input
 - [x] Testes de controle de acesso
 - [x] Testes de lógica de conciliação (positivo/negativo)
+
+## Módulo ADM ERP
+
+### Painel de Administração
+- [x] Novo módulo "ADM ERP" na sidebar (visível apenas para Admin)
+- [x] Listagem de todos os usuários com nome, username, permissão e senha visível
+- [x] Criar novos usuários com username, senha e nível de acesso
+- [x] Editar permissão de usuários existentes
+- [x] Resetar/alterar senha de qualquer usuário
+- [x] Ativar/desativar usuários
+
+### Login e Troca de Senha
+- [x] Opção "Trocar Senha" na tela de login
+- [x] Formulário de troca: username, senha atual, nova senha
+- [x] Atualizar login master: marceloabreu / Ma@468709
+
+### Schema e Backend
+- [x] Campo plainPassword na tabela users (senha em texto para admin ver)
+- [x] Router de troca de senha (público, com validação de senha atual)
+- [x] Mover gerenciamento de usuários do Configurações para ADM ERP
+
+### Testes
+- [x] Testes de troca de senha
+- [x] Testes de visibilidade de senhas para admin
+- [x] Testes de controle de acesso ao ADM ERP

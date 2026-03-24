@@ -84,15 +84,15 @@ export const appRouter = router({
         ctx.res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
         return { success: true, user: { id: user.id, name: user.name, role: user.role } };
       }),
-    changePassword: protectedProcedure
-      .input(z.object({ currentPassword: z.string().min(1), newPassword: z.string().min(6) }))
-      .mutation(async ({ input, ctx }) => {
-        const user = await getUserByUsername(ctx.user.username ?? "");
+    changePassword: publicProcedure
+      .input(z.object({ username: z.string().min(1), currentPassword: z.string().min(1), newPassword: z.string().min(6) }))
+      .mutation(async ({ input }) => {
+        const user = await getUserByUsername(input.username);
         if (!user || !user.passwordHash) throw new Error("Usuário não encontrado");
         const valid = await bcrypt.compare(input.currentPassword, user.passwordHash);
         if (!valid) throw new Error("Senha atual incorreta");
         const hash = await bcrypt.hash(input.newPassword, 10);
-        await updateUserPassword(user.id, hash);
+        await updateUserPassword(user.id, hash, input.newPassword);
         return { success: true } as const;
       }),
   }),
@@ -117,6 +117,7 @@ export const appRouter = router({
         const user = await createLocalUser({
           username: input.username,
           passwordHash: hash,
+          plainPassword: input.password,
           name: input.name,
           email: input.email,
           role: input.role,
@@ -127,7 +128,7 @@ export const appRouter = router({
       .input(z.object({ userId: z.number(), newPassword: z.string().min(6) }))
       .mutation(async ({ input }) => {
         const hash = await bcrypt.hash(input.newPassword, 10);
-        await updateUserPassword(input.userId, hash);
+        await updateUserPassword(input.userId, hash, input.newPassword);
         return { success: true } as const;
       }),
     toggleActive: adminProcedure
