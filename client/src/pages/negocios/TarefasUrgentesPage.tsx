@@ -28,7 +28,7 @@ export default function TarefasUrgentesPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground flex items-center gap-2 mb-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2 mb-6">
         <AlertTriangle className="h-6 w-6 text-orange-500" /> Tarefas Urgentes
       </h1>
 

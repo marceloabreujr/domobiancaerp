@@ -123,7 +123,7 @@ export default function PropertyDetailDialog({ propertyId, open, onClose }: { pr
 
             <div className="space-y-4">
               {/* Info básica */}
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Tipo:</span> <span className="font-medium">{typeLabels[property.propertyType]}</span></div>
                 <div><span className="text-muted-foreground">Status:</span> <span className="font-medium">{statusLabels[property.status]}</span></div>
                 <div><span className="text-muted-foreground">Posse:</span> <span className="font-medium">{property.ownership === "domobianca" ? "Domobianca" : "Terceiros"}</span></div>
@@ -147,7 +147,7 @@ export default function PropertyDetailDialog({ propertyId, open, onClose }: { pr
               </div>
 
               {/* Valores */}
-              <div className="grid grid-cols-2 gap-3 bg-muted/30 rounded-lg p-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/30 rounded-lg p-3">
                 {property.rentValue && <div className="text-sm"><span className="text-muted-foreground">Aluguel:</span> <span className="font-semibold">R$ {parseFloat(property.rentValue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>}
                 {property.saleValue && <div className="text-sm"><span className="text-muted-foreground">Venda:</span> <span className="font-semibold">R$ {parseFloat(property.saleValue).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>}
                 {property.condoFee && <div className="text-sm"><span className="text-muted-foreground">Condomínio:</span> <span className="font-medium">R$ {parseFloat(property.condoFee).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span></div>}
@@ -183,7 +183,7 @@ export default function PropertyDetailDialog({ propertyId, open, onClose }: { pr
                             <span className="font-medium">{tenant?.name || `Inquilino #${c.tenantId}`}</span>
                             <span className={`text-xs px-2 py-0.5 rounded-full ${c.status === "ativo" ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-600"}`}>{c.status}</span>
                           </div>
-                          <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-xs text-muted-foreground">
                             <span>Aluguel: R$ {parseFloat(c.rentAmount).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                             <span>Prazo: {leaseLabels[c.leaseTerm] || c.leaseTerm}</span>
                             <span>Início: {c.startDate ? new Date(c.startDate).toLocaleDateString("pt-BR") : "-"}</span>

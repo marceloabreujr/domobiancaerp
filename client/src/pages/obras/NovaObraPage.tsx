@@ -91,7 +91,7 @@ export default function NovaObraPage({ onSuccess }: { onSuccess?: () => void }) 
               <Label>Endereço</Label>
               <Input value={form.address} onChange={e => setForm(f => ({ ...f, address: e.target.value }))} placeholder="Rua, número, bairro" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Cidade</Label>
                 <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} />
@@ -101,7 +101,7 @@ export default function NovaObraPage({ onSuccess }: { onSuccess?: () => void }) 
                 <Input value={form.state} onChange={e => setForm(f => ({ ...f, state: e.target.value }))} placeholder="UF" maxLength={2} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Data de Início</Label>
                 <Input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} />
@@ -179,7 +179,7 @@ export default function NovaObraPage({ onSuccess }: { onSuccess?: () => void }) 
         <div className="bg-card border border-border rounded-lg p-5">
           <h3 className="font-medium text-base mb-4 text-foreground">3. Características da Obra</h3>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Tipo de Obra</Label>
                 <Select value={form.constructionType} onValueChange={v => setForm(f => ({ ...f, constructionType: v }))}>

@@ -125,7 +125,7 @@ export default function ObrasListPage({ archived }: { archived: boolean }) {
           </DialogHeader>
           {detailObra && (
             <div className="space-y-3 text-sm">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div><span className="text-muted-foreground">Tipo:</span> {typeLabels[detailObra.constructionType]}</div>
                 <div><span className="text-muted-foreground">Status:</span> {statusLabels[detailObra.status]}</div>
                 <div><span className="text-muted-foreground">Andamento:</span> {progressLabels[detailObra.progress]?.label}</div>

@@ -31,7 +31,7 @@ export default function AdminLayout() {
     <DashboardLayout>
       <div className="max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-foreground">Administrativo</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Administrativo</h1>
           <p className="text-muted-foreground mt-1">
             RH, documentos, calendário, rotinas e inteligência artificial.
           </p>

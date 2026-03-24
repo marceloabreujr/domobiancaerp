@@ -53,7 +53,7 @@ export default function ProprietariosPage() {
       {showForm && (
         <div className="border border-border rounded-xl p-4 bg-card space-y-3">
           <h3 className="font-medium text-sm">{editingId ? "Editar Proprietário" : "Novo Proprietário"}</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label className="text-xs">Nome *</Label><Input className="h-9" value={form.name} onChange={e => set("name", e.target.value)} /></div>
             <div><Label className="text-xs">CPF/CNPJ</Label><Input className="h-9" value={form.cpfCnpj} onChange={e => set("cpfCnpj", e.target.value)} /></div>
             <div><Label className="text-xs">E-mail</Label><Input className="h-9" value={form.email} onChange={e => set("email", e.target.value)} /></div>
@@ -62,7 +62,7 @@ export default function ProprietariosPage() {
             <div><Label className="text-xs">Endereço</Label><Input className="h-9" value={form.address} onChange={e => set("address", e.target.value)} /></div>
           </div>
           <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2">Dados Bancários</h4>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label className="text-xs">Banco</Label><Input className="h-9" value={form.bankName} onChange={e => set("bankName", e.target.value)} /></div>
             <div><Label className="text-xs">Agência</Label><Input className="h-9" value={form.bankAgency} onChange={e => set("bankAgency", e.target.value)} /></div>
             <div><Label className="text-xs">Conta</Label><Input className="h-9" value={form.bankAccount} onChange={e => set("bankAccount", e.target.value)} /></div>

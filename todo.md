@@ -354,3 +354,16 @@
 ## Bug Fixes (Pós-Migração Supabase)
 
 - [x] Login não funciona após migração para Supabase (usuário marceloabreu criado no banco)
+
+## Mobile-Friendly (Responsividade)
+
+- [x] DashboardLayout: padding responsivo (p-3 sm:p-4 md:p-6) + sidebar hamburger menu
+- [x] Formulários: grid-cols-2 → grid-cols-1 sm:grid-cols-2 (40 ocorrências em 19 arquivos)
+- [x] Formulários: grid-cols-3 → grid-cols-1 sm:grid-cols-2 md:grid-cols-3
+- [x] Tabelas fixas (ADM ERP + Configurações): cards no mobile + tabela desktop
+- [x] Botões e inputs: min 44px touch targets (CSS global)
+- [x] Tela de login: já responsiva (max-w-md + p-4)
+- [x] Módulos internos: tabs com scroll horizontal + scrollbar oculta
+- [x] Tipografia: text-2xl → text-xl sm:text-2xl em todos os títulos
+- [x] Dialogs: full-width no mobile (max-width calc)
+- [x] Body: overflow-x hidden no mobile

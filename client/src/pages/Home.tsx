@@ -57,7 +57,7 @@ export default function Home() {
     <DashboardLayout>
       <div className="max-w-5xl">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-foreground">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
             Olá, {firstName}
           </h1>
           <p className="text-muted-foreground mt-1">
@@ -65,7 +65,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           {modules.map((mod) => (
             <button
               key={mod.path}

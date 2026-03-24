@@ -125,7 +125,7 @@ function ConsumiveisSection() {
                 <SelectContent><SelectItem value="escritorio">Escritório</SelectItem><SelectItem value="copa">Copa</SelectItem><SelectItem value="limpeza">Limpeza</SelectItem><SelectItem value="outro">Outro</SelectItem></SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
               <div><Label>Estoque</Label><Input type="number" value={form.currentStock} onChange={(e) => setForm({ ...form, currentStock: Number(e.target.value) })} /></div>
               <div><Label>Mínimo</Label><Input type="number" value={form.minStock} onChange={(e) => setForm({ ...form, minStock: Number(e.target.value) })} /></div>
               <div><Label>Unidade</Label><Input value={form.unit} onChange={(e) => setForm({ ...form, unit: e.target.value })} /></div>
@@ -199,11 +199,11 @@ function FrotaSection() {
         <DialogContent className="max-w-sm">
           <DialogHeader><DialogTitle>{editId ? "Editar Veículo" : "Novo Veículo"}</DialogTitle></DialogHeader>
           <div className="grid gap-3 py-2">
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><Label>Placa *</Label><Input value={form.plate} onChange={(e) => setForm({ ...form, plate: e.target.value })} placeholder="ABC-1234" /></div>
               <div><Label>Modelo *</Label><Input value={form.model} onChange={(e) => setForm({ ...form, model: e.target.value })} placeholder="Fiat Uno" /></div>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><Label>Ano</Label><Input type="number" value={form.year} onChange={(e) => setForm({ ...form, year: Number(e.target.value) })} /></div>
               <div><Label>KM</Label><Input type="number" value={form.km} onChange={(e) => setForm({ ...form, km: Number(e.target.value) })} /></div>
             </div>
@@ -246,7 +246,7 @@ function FundoSection() {
   return (
     <div className="space-y-4">
       {/* Balance cards */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
         <div className="border border-border rounded-xl p-3 text-center">
           <p className="text-xs text-muted-foreground">Entradas</p>
           <p className="text-lg font-semibold text-emerald-600">{fmt(balance?.entradas ?? 0)}</p>
@@ -294,7 +294,7 @@ function FundoSection() {
           <DialogHeader><DialogTitle>Novo Lançamento</DialogTitle></DialogHeader>
           <div className="grid gap-3 py-2">
             <div><Label>Descrição *</Label><Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ex: Café para copa" /></div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><Label>Valor (R$) *</Label><Input value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0.00" /></div>
               <div><Label>Tipo *</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
@@ -382,7 +382,7 @@ function ChamadosSection() {
           <div className="grid gap-3 py-2">
             <div><Label>Título *</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Descreva o problema" /></div>
             <div><Label>Descrição</Label><textarea className="w-full min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div><Label>Categoria</Label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>

@@ -73,7 +73,7 @@ export default function CaptadoresPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
           <Users className="h-6 w-6 text-primary" /> Captadores
         </h1>
         <Button onClick={() => { resetForm(); setShowForm(true); }}>
@@ -127,7 +127,7 @@ export default function CaptadoresPage() {
               <Label>Nome *</Label>
               <Input value={form.name} onChange={(e) => set("name", e.target.value)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <Label>Tipo de Parceiro</Label>
                 <Select value={form.partnerType} onValueChange={(v) => set("partnerType", v)}>
@@ -146,7 +146,7 @@ export default function CaptadoresPage() {
                 <Input type="number" value={form.defaultCommission} onChange={(e) => set("defaultCommission", e.target.value)} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Telefone</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div>
               <div><Label>E-mail</Label><Input value={form.email} onChange={(e) => set("email", e.target.value)} /></div>
             </div>
@@ -171,13 +171,13 @@ export default function CaptadoresPage() {
           </DialogHeader>
           {dashboard && (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="bg-muted/50 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-foreground">{dashboard.deals.length}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-foreground">{dashboard.deals.length}</p>
                   <p className="text-xs text-muted-foreground">Negócios</p>
                 </div>
                 <div className="bg-muted/50 rounded-lg p-3 text-center">
-                  <p className="text-2xl font-bold text-primary">{formatCurrency(dashboard.totalVGV)}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-primary">{formatCurrency(dashboard.totalVGV)}</p>
                   <p className="text-xs text-muted-foreground">VGV Total</p>
                 </div>
               </div>

@@ -24,7 +24,7 @@ export default function ResumoFinanceiroPage() {
                 <div className="p-2 rounded-lg bg-emerald-100"><DollarSign className="h-4 w-4 text-emerald-600" /></div>
                 <span className="text-sm text-muted-foreground">Receita Aluguéis</span>
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(summary?.totalRentIncome ?? 0)}</p>
+              <p className="text-xl sm:text-2xl font-bold">{formatCurrency(summary?.totalRentIncome ?? 0)}</p>
               <p className="text-xs text-muted-foreground mt-1">mensal</p>
             </div>
 
@@ -33,7 +33,7 @@ export default function ResumoFinanceiroPage() {
                 <div className="p-2 rounded-lg bg-blue-100"><Building2 className="h-4 w-4 text-blue-600" /></div>
                 <span className="text-sm text-muted-foreground">Condomínios</span>
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(summary?.totalCondoIncome ?? 0)}</p>
+              <p className="text-xl sm:text-2xl font-bold">{formatCurrency(summary?.totalCondoIncome ?? 0)}</p>
               <p className="text-xs text-muted-foreground mt-1">recebido de inquilinos</p>
             </div>
 
@@ -42,7 +42,7 @@ export default function ResumoFinanceiroPage() {
                 <div className="p-2 rounded-lg bg-purple-100"><Percent className="h-4 w-4 text-purple-600" /></div>
                 <span className="text-sm text-muted-foreground">Taxas Admin</span>
               </div>
-              <p className="text-2xl font-bold">{formatCurrency(summary?.totalAdminFees ?? 0)}</p>
+              <p className="text-xl sm:text-2xl font-bold">{formatCurrency(summary?.totalAdminFees ?? 0)}</p>
               <p className="text-xs text-muted-foreground mt-1">de imóveis de terceiros</p>
             </div>
 
@@ -51,7 +51,7 @@ export default function ResumoFinanceiroPage() {
                 <div className="p-2 rounded-lg bg-amber-100"><FileText className="h-4 w-4 text-amber-600" /></div>
                 <span className="text-sm text-muted-foreground">Contratos Ativos</span>
               </div>
-              <p className="text-2xl font-bold">{summary?.activeContracts ?? 0}</p>
+              <p className="text-xl sm:text-2xl font-bold">{summary?.activeContracts ?? 0}</p>
               <p className="text-xs text-muted-foreground mt-1">em vigência</p>
             </div>
           </div>

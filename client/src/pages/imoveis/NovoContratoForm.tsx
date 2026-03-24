@@ -68,7 +68,7 @@ export default function NovoContratoForm({ propertyId, clients, onSuccess }: { p
   return (
     <div className="space-y-3">
       <h4 className="font-medium text-sm">Novo Contrato</h4>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs">Inquilino *</Label>
           <Select value={form.tenantId} onValueChange={(v) => set("tenantId", v)}>
@@ -148,7 +148,7 @@ export default function NovoContratoForm({ propertyId, clients, onSuccess }: { p
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
           <Label className="text-xs">Morador/Ocupante (se diferente)</Label>
           <Input className="h-9" value={form.occupantName} onChange={e => set("occupantName", e.target.value)} placeholder="Nome do morador" />

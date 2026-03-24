@@ -87,7 +87,7 @@ export default function NovoNegocioPage() {
     <div className="max-w-3xl">
       <div className="flex items-center gap-3 mb-6">
         <Briefcase className="h-6 w-6 text-primary" />
-        <h1 className="text-2xl font-bold text-foreground">Novo Negócio</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground">Novo Negócio</h1>
       </div>
 
       {/* Step indicator */}

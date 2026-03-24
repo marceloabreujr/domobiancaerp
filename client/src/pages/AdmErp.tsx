@@ -61,7 +61,7 @@ export default function AdmErp() {
           <div className="h-16 w-16 rounded-2xl bg-destructive/10 flex items-center justify-center mb-6">
             <Shield className="h-8 w-8 text-destructive" />
           </div>
-          <h1 className="text-2xl font-semibold text-foreground mb-2">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground mb-2">
             Acesso restrito
           </h1>
           <p className="text-muted-foreground max-w-md">
@@ -81,7 +81,7 @@ export default function AdmErp() {
               <ShieldCheck className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">ADM ERP</h1>
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground">ADM ERP</h1>
               <p className="text-muted-foreground text-sm">
                 Painel de administração master — gerenciar usuários, permissões e senhas.
               </p>
@@ -151,7 +151,7 @@ function UserManagement({ currentUserId }: { currentUserId: number }) {
               <Users className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{totalUsers}</p>
+              <p className="text-xl sm:text-2xl font-bold">{totalUsers}</p>
               <p className="text-xs text-muted-foreground">Total de Usuários</p>
             </div>
           </CardContent>
@@ -162,7 +162,7 @@ function UserManagement({ currentUserId }: { currentUserId: number }) {
               <Power className="h-5 w-5 text-emerald-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{activeUsers}</p>
+              <p className="text-xl sm:text-2xl font-bold">{activeUsers}</p>
               <p className="text-xs text-muted-foreground">Usuários Ativos</p>
             </div>
           </CardContent>
@@ -173,7 +173,7 @@ function UserManagement({ currentUserId }: { currentUserId: number }) {
               <ShieldCheck className="h-5 w-5 text-red-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold">{adminCount}</p>
+              <p className="text-xl sm:text-2xl font-bold">{adminCount}</p>
               <p className="text-xs text-muted-foreground">Administradores</p>
             </div>
           </CardContent>
@@ -218,7 +218,77 @@ function UserManagement({ currentUserId }: { currentUserId: number }) {
           </CardContent>
         </Card>
       ) : (
-        <div className="border border-border rounded-xl overflow-hidden bg-card">
+        <>
+        {/* Mobile: Cards */}
+        <div className="space-y-3 md:hidden">
+          {users.map((u) => {
+            const isSelf = u.id === currentUserId;
+            const isPasswordVisible = visiblePasswords.has(u.id);
+            return (
+              <Card key={u.id} className={`${!u.isActive ? "opacity-50" : ""}`}>
+                <CardContent className="p-4 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 shrink-0">
+                      <AvatarFallback className="text-xs font-medium bg-primary/10 text-primary">
+                        {u.name?.charAt(0).toUpperCase() ?? "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate text-foreground">
+                        {u.name || "Sem nome"}
+                        {isSelf && <span className="text-xs text-muted-foreground ml-1">(você)</span>}
+                      </p>
+                      <p className="text-xs text-muted-foreground truncate">@{u.username || "—"}</p>
+                    </div>
+                    {u.isActive ? (
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-200 text-xs shrink-0">Ativo</Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 text-xs shrink-0">Inativo</Badge>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Senha:</span>
+                    <code className="text-xs bg-muted px-2 py-1 rounded font-mono">
+                      {isPasswordVisible ? ((u as any).plainPassword || "•••") : "••••••••"}
+                    </code>
+                    <button onClick={() => togglePasswordVisibility(u.id)} className="text-muted-foreground hover:text-foreground">
+                      {isPasswordVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <div>
+                      {isSelf ? (
+                        <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${ROLE_COLORS[u.role]}`}>{ROLE_LABELS[u.role]}</span>
+                      ) : (
+                        <Select value={u.role} onValueChange={(value) => updateRole.mutate({ userId: u.id, role: value as "admin" | "gerente" | "operador" })}>
+                          <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="admin">Administrador</SelectItem>
+                            <SelectItem value="gerente">Gerente</SelectItem>
+                            <SelectItem value="operador">Operador</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
+                    </div>
+                    {!isSelf && (
+                      <div className="flex items-center gap-1">
+                        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1" onClick={() => setResetPasswordDialog({ userId: u.id, name: u.name || "Usuário" })}>
+                          <Key className="h-3.5 w-3.5" /> Resetar
+                        </Button>
+                        <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 ${u.isActive ? "text-emerald-600 hover:text-red-600" : "text-slate-400 hover:text-emerald-600"}`} onClick={() => toggleActive.mutate({ userId: u.id, isActive: !u.isActive })} title={u.isActive ? "Desativar" : "Ativar"}>
+                          {u.isActive ? <Power className="h-4 w-4" /> : <PowerOff className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+
+        {/* Desktop: Table */}
+        <div className="border border-border rounded-xl overflow-hidden bg-card hidden md:block">
           <div className="bg-muted/40 px-5 py-3 border-b border-border grid grid-cols-[auto_1fr_100px_140px_180px_100px_70px] gap-4 items-center">
             <div className="w-9" />
             <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Nome / Usuário</span>
@@ -340,6 +410,7 @@ function UserManagement({ currentUserId }: { currentUserId: number }) {
             })}
           </div>
         </div>
+        </>
       )}
 
       {/* Reset Password Dialog */}

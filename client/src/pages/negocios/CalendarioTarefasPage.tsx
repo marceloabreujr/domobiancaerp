@@ -49,7 +49,7 @@ export default function CalendarioTarefasPage() {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-foreground flex items-center gap-2">
           <Calendar className="h-6 w-6 text-primary" /> Calendário de Tarefas
         </h1>
         <Button onClick={() => { setForm({ title: "", description: "", dueDate: "", priority: "normal", negocioId: undefined }); setShowForm(true); }}>
@@ -117,7 +117,7 @@ export default function CalendarioTarefasPage() {
           <div className="space-y-4">
             <div><Label>Título *</Label><Input value={form.title} onChange={(e) => set("title", e.target.value)} /></div>
             <div><Label>Descrição</Label><Input value={form.description} onChange={(e) => set("description", e.target.value)} /></div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><Label>Data *</Label><Input type="date" value={form.dueDate} onChange={(e) => set("dueDate", e.target.value)} /></div>
               <div>
                 <Label>Prioridade</Label>

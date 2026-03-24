@@ -53,7 +53,7 @@ export default function ClientesPage() {
       {showForm && (
         <div className="border border-border rounded-xl p-4 bg-card space-y-3">
           <h3 className="font-medium text-sm">{editingId ? "Editar Cliente" : "Novo Cliente"}</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div><Label className="text-xs">Nome *</Label><Input className="h-9" value={form.name} onChange={e => set("name", e.target.value)} /></div>
             <div><Label className="text-xs">CPF/CNPJ</Label><Input className="h-9" value={form.cpfCnpj} onChange={e => set("cpfCnpj", e.target.value)} /></div>
             <div><Label className="text-xs">E-mail</Label><Input className="h-9" value={form.email} onChange={e => set("email", e.target.value)} /></div>

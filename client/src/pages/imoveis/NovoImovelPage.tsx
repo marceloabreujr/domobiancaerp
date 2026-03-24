@@ -141,7 +141,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
       {/* ─── Identificação ─────────────────────────────────────── */}
       <section className="space-y-3 border border-border rounded-xl p-4 bg-card">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Identificação</h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="col-span-2">
             <Label className="text-xs">Título / Nome do Imóvel *</Label>
             <Input className="h-9" value={form.title} onChange={e => set("title", e.target.value)} placeholder="Ex: Apto 301 - Ed. Solar" />
@@ -190,7 +190,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
       {/* ─── Endereço ──────────────────────────────────────────── */}
       <section className="space-y-3 border border-border rounded-xl p-4 bg-card">
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Endereço</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           <div className="col-span-2"><Label className="text-xs">Rua</Label><Input className="h-9" value={form.street} onChange={e => set("street", e.target.value)} /></div>
           <div><Label className="text-xs">Número</Label><Input className="h-9" value={form.number} onChange={e => set("number", e.target.value)} /></div>
           <div><Label className="text-xs">Complemento</Label><Input className="h-9" value={form.complement} onChange={e => set("complement", e.target.value)} /></div>
@@ -218,7 +218,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide">
           {isLocacao ? "Valores Mensais" : "Valores de Venda"}
         </h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           {!isLocacao && (
             <div><Label className="text-xs">Valor de Venda (R$) *</Label><Input className="h-9" value={form.saleValue} onChange={e => set("saleValue", e.target.value)} placeholder="350000.00" /></div>
           )}
@@ -247,7 +247,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
           {wantContract && (
             <div className="space-y-4">
               {/* Inquilino */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <Label className="text-xs">Inquilino (Responsável Financeiro) *</Label>
                   <Select value={contract.tenantId} onValueChange={v => setC("tenantId", v)}>
@@ -261,7 +261,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
               </div>
 
               {/* Datas e Prazo */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs">Início do Contrato *</Label>
                   <Input type="date" className="h-9" value={contract.startDate} onChange={e => setC("startDate", e.target.value)} />
@@ -288,7 +288,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
               </div>
 
               {/* Valores */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                 <div>
                   <Label className="text-xs">Valor do Aluguel (R$) *</Label>
                   <Input className="h-9" value={contract.rentAmount} onChange={e => setC("rentAmount", e.target.value)} placeholder="1500.00" />
@@ -310,7 +310,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
               </div>
 
               {/* Pacote */}
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label className="flex items-center gap-2 text-xs pt-5">
                   <input type="checkbox" checked={contract.isPackage} onChange={e => setC("isPackage", e.target.checked)} className="rounded" />
                   Pacote de Locação (valor total fechado)
@@ -323,7 +323,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
               {/* Reajuste Anual */}
               <div className="border-t border-blue-200 pt-3">
                 <h4 className="text-xs font-medium text-blue-700 uppercase tracking-wide mb-3">Reajuste Anual</h4>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                   <div>
                     <Label className="text-xs">Índice de Reajuste</Label>
                     <Select value={contract.adjustmentIndex} onValueChange={v => setC("adjustmentIndex", v)}>
@@ -350,7 +350,7 @@ export default function NovoImovelPage({ mode, onSuccess }: Props) {
               {/* Multa e Juros */}
               <div className="border-t border-blue-200 pt-3">
                 <h4 className="text-xs font-medium text-blue-700 uppercase tracking-wide mb-3">Multa e Juros por Atraso</h4>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><Label className="text-xs">Multa por Atraso (%)</Label><Input className="h-9" value={contract.lateFeePercent} onChange={e => setC("lateFeePercent", e.target.value)} /></div>
                   <div><Label className="text-xs">Juros Diários (%)</Label><Input className="h-9" value={contract.dailyInterestPercent} onChange={e => setC("dailyInterestPercent", e.target.value)} /></div>
                 </div>

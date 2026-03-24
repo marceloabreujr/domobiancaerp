@@ -183,3 +183,31 @@
     }
   }
 }
+
+/* Mobile optimizations */
+@media (max-width: 767px) {
+  /* Ensure minimum touch target size */
+  button, [role="button"], a, select, input[type="checkbox"], input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Prevent horizontal overflow on mobile */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better scrolling for tab navigation */
+  nav {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Dialog full-width on mobile */
+  [role="dialog"] {
+    max-width: calc(100vw - 2rem) !important;
+  }
+}

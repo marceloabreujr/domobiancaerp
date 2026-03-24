@@ -43,7 +43,7 @@ export default function TodosPage() {
 
       {showForm && (
         <div className="border border-border rounded-xl p-4 bg-card space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="col-span-2"><Label className="text-xs">Título *</Label><Input className="h-9" value={form.title} onChange={e => set("title", e.target.value)} placeholder="O que precisa ser feito?" /></div>
             <div><Label className="text-xs">Imóvel (opcional)</Label>
               <Select value={form.propertyId} onValueChange={v => set("propertyId", v)}>

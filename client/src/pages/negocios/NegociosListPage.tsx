@@ -76,7 +76,7 @@ export default function NegociosListPage(props: { archived?: boolean } & Record<
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-6">
+      <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-6">
         {archived ? "Negócios Arquivados" : "Negócios Ativos"}
       </h1>
 
@@ -159,7 +159,7 @@ export default function NegociosListPage(props: { archived?: boolean } & Record<
               </div>
 
               {/* Info grid */}
-              <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div><span className="text-muted-foreground">Titularidade:</span> <span className="font-medium">{detail.ownership === "proprio" ? "Próprio" : "Terceiros"}</span></div>
                 <div><span className="text-muted-foreground">Operação:</span> <span className="font-medium">{opLabels[detail.operationType] || detail.operationType}</span></div>
                 <div><span className="text-muted-foreground">Prioridade:</span> <span className={`font-medium ${prioColors[detail.priority]}`}>{prioLabels[detail.priority]}</span></div>
@@ -171,7 +171,7 @@ export default function NegociosListPage(props: { archived?: boolean } & Record<
               {(detail.totalArea || detail.usableArea || detail.zoning) && (
                 <div className="border-t border-border pt-3">
                   <h4 className="font-semibold text-sm mb-2">Dados Técnicos</h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     {detail.totalArea && <div><span className="text-muted-foreground">Área Total:</span> {detail.totalArea} m²</div>}
                     {detail.usableArea && <div><span className="text-muted-foreground">Área Útil:</span> {detail.usableArea} m²</div>}
                     {detail.zoning && <div><span className="text-muted-foreground">Zoneamento:</span> {detail.zoning}</div>}
@@ -183,7 +183,7 @@ export default function NegociosListPage(props: { archived?: boolean } & Record<
               {/* Financial indicators */}
               <div className="border-t border-border pt-3">
                 <h4 className="font-semibold text-sm mb-2">Indicadores Financeiros</h4>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                   <div><span className="text-muted-foreground">Custo Oportunidade:</span> {formatCurrency(detail.opportunityCost)}</div>
                   <div><span className="text-muted-foreground">Valor de Mercado:</span> {formatCurrency(detail.marketValue)}</div>
                   <div><span className="text-muted-foreground">Investimento Máx:</span> {formatCurrency(detail.maxInvestment)}</div>
@@ -206,7 +206,7 @@ export default function NegociosListPage(props: { archived?: boolean } & Record<
                       {viab.viabilityStatus === "verde" ? "VIÁVEL" : viab.viabilityStatus === "amarelo" ? "ATENÇÃO" : "INVIÁVEL"}
                     </span>
                   </h4>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
                     <div><span className="text-muted-foreground">Custo Total:</span> {formatCurrency(viab.totalCost)}</div>
                     <div><span className="text-muted-foreground">Lucro Líquido:</span> {formatCurrency(viab.netProfit)}</div>
                     <div><span className="text-muted-foreground">Margem:</span> {viab.profitMargin}%</div>

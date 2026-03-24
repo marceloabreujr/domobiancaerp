@@ -179,7 +179,7 @@ export default function ContasRecorrentes() {
               <label className="text-xs font-medium text-muted-foreground">Título *</label>
               <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Ex: IPTU Apt 101" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Categoria</label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
@@ -200,7 +200,7 @@ export default function ContasRecorrentes() {
                 </Select>
               </div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Valor (R$) *</label>
                 <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} />
@@ -219,7 +219,7 @@ export default function ContasRecorrentes() {
                 <Input type="number" min="1" max="28" value={form.billingDay} onChange={(e) => setForm({ ...form, billingDay: e.target.value })} />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Data Início *</label>
                 <Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />

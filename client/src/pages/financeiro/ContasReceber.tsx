@@ -208,7 +208,7 @@ export default function ContasReceber() {
               <label className="text-xs font-medium text-muted-foreground">Descrição *</label>
               <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ex: Aluguel Apt 101 - Jan/2026" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Categoria</label>
                 <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
@@ -223,7 +223,7 @@ export default function ContasReceber() {
                 <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0,00" />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Vencimento *</label>
                 <Input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} />

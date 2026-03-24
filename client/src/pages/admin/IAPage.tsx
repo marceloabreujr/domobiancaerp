@@ -99,7 +99,7 @@ function OCRTool() {
       {ocrMutation.data?.data && (
         <div className="bg-muted/30 rounded-xl p-4 space-y-3">
           <h4 className="font-medium text-sm">Dados Extraídos</h4>
-          <div className="grid grid-cols-2 gap-2 text-sm">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
             <div><span className="text-muted-foreground">Fornecedor:</span> <span className="font-medium">{ocrMutation.data.data.fornecedor}</span></div>
             <div><span className="text-muted-foreground">CNPJ:</span> <span className="font-medium">{ocrMutation.data.data.cnpj}</span></div>
             <div><span className="text-muted-foreground">Data:</span> <span className="font-medium">{ocrMutation.data.data.data}</span></div>
