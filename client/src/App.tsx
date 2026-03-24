@@ -7,7 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Financeiro from "./pages/Financeiro";
 import AdminLayout from "./pages/admin/AdminLayout";
-import Obras from "./pages/Obras";
+import ObrasLayout from "./pages/obras/ObrasLayout";
 import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
 import Suprimentos from "./pages/Suprimentos";
 import NegociosLayout from "./pages/negocios/NegociosLayout";
@@ -19,7 +19,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/financeiro" component={Financeiro} />
       <Route path="/administrativo" component={AdminLayout} />
-      <Route path="/obras" component={Obras} />
+      <Route path="/obras" component={ObrasLayout} />
       <Route path="/imoveis" component={ImoveisLayout} />
       <Route path="/suprimentos" component={Suprimentos} />
       <Route path="/negocios/:rest*" component={NegociosLayout} />

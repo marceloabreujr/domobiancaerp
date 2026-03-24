@@ -414,3 +414,111 @@ export const businessTasks = mysqlTable("business_tasks", {
 
 export type BusinessTask = typeof businessTasks.$inferSelect;
 export type InsertBusinessTask = typeof businessTasks.$inferInsert;
+
+// ─── MÓDULO GESTÃO DE OBRAS ──────────────────────────────────────────────────
+
+// 1. Empreiteiros
+export const contractors = mysqlTable("contractors", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("contractorPhone", { length: 20 }),
+  email: varchar("contractorEmail", { length: 320 }),
+  cpfCnpj: varchar("contractorCpfCnpj", { length: 20 }),
+  specialty: varchar("contractorSpecialty", { length: 255 }),
+  notes: text("contractorNotes"),
+  createdAt: timestamp("contractorCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("contractorUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Contractor = typeof contractors.$inferSelect;
+export type InsertContractor = typeof contractors.$inferInsert;
+
+// 2. Arquitetas
+export const architects = mysqlTable("architects", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("architectName", { length: 255 }).notNull(),
+  phone: varchar("architectPhone", { length: 20 }),
+  email: varchar("architectEmail", { length: 320 }),
+  cpfCnpj: varchar("architectCpfCnpj", { length: 20 }),
+  specialty: varchar("architectSpecialty", { length: 255 }),
+  notes: text("architectNotes"),
+  createdAt: timestamp("architectCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("architectUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Architect = typeof architects.$inferSelect;
+export type InsertArchitect = typeof architects.$inferInsert;
+
+// 3. Obras
+export const constructions = mysqlTable("constructions", {
+  id: int("id").autoincrement().primaryKey(),
+  title: varchar("constructionTitle", { length: 255 }).notNull(),
+  // Localização
+  address: text("constructionAddress"),
+  city: varchar("constructionCity", { length: 128 }),
+  state: varchar("constructionState", { length: 2 }),
+  // Controle de acesso
+  hasKey: boolean("hasKey").default(false),
+  // Profissionais
+  contractorId: int("contractorId"),
+  architectId: int("architectId"),
+  // Características
+  constructionType: mysqlEnum("constructionType", ["residencial", "comercial", "reforma", "galpao", "loteamento", "outro"]).default("residencial").notNull(),
+  status: mysqlEnum("constructionStatus", ["em_andamento", "paralisada", "concluida"]).default("em_andamento").notNull(),
+  progress: mysqlEnum("constructionProgress", ["avancada", "em_dia", "atrasada", "totalmente_atrasada"]).default("em_dia").notNull(),
+  // Extras
+  description: text("constructionDescription"),
+  isArchived: boolean("constructionIsArchived").default(false),
+  startDate: date("constructionStartDate"),
+  expectedEndDate: date("constructionExpectedEndDate"),
+  createdAt: timestamp("constructionCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("constructionUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Construction = typeof constructions.$inferSelect;
+export type InsertConstruction = typeof constructions.$inferInsert;
+
+// 4. Relatórios de Obra (Diário de Obra)
+export const constructionReports = mysqlTable("construction_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  constructionId: int("reportConstructionId").notNull(),
+  title: varchar("reportTitle", { length: 255 }).notNull(),
+  content: text("reportContent").notNull(),
+  author: varchar("reportAuthor", { length: 255 }),
+  reportDate: date("reportDate").notNull(),
+  createdAt: timestamp("reportCreatedAt").defaultNow().notNull(),
+  updatedAt: timestamp("reportUpdatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type ConstructionReport = typeof constructionReports.$inferSelect;
+export type InsertConstructionReport = typeof constructionReports.$inferInsert;
+
+// 5. Imagens de Obra (Galeria)
+export const constructionImages = mysqlTable("construction_images", {
+  id: int("id").autoincrement().primaryKey(),
+  constructionId: int("imageConstructionId").notNull(),
+  imageUrl: text("imageUrl").notNull(),
+  imageKey: varchar("imageKey", { length: 512 }),
+  caption: varchar("imageCaption", { length: 255 }),
+  uploadedBy: varchar("imageUploadedBy", { length: 255 }),
+  uploadedAt: timestamp("imageUploadedAt").defaultNow().notNull(),
+});
+
+export type ConstructionImage = typeof constructionImages.$inferSelect;
+export type InsertConstructionImage = typeof constructionImages.$inferInsert;
+
+// 6. Calendário de Tarefas de Obra
+export const constructionTasks = mysqlTable("construction_tasks", {
+  id: int("id").autoincrement().primaryKey(),
+  constructionId: int("taskConstructionId"),
+  title: varchar("cTaskTitle", { length: 255 }).notNull(),
+  description: text("cTaskDescription"),
+  dueDate: date("cTaskDueDate").notNull(),
+  taskType: mysqlEnum("cTaskType", ["marco", "prazo_entrega", "vistoria", "reuniao", "outro"]).default("outro").notNull(),
+  isCompleted: boolean("cTaskIsCompleted").default(false),
+  completedAt: timestamp("cTaskCompletedAt"),
+  createdAt: timestamp("cTaskCreatedAt").defaultNow().notNull(),
+});
+
+export type ConstructionTask = typeof constructionTasks.$inferSelect;
+export type InsertConstructionTask = typeof constructionTasks.$inferInsert;

@@ -169,3 +169,33 @@
 ## Bug Fixes
 - [x] Corrigir layout responsivo do NegociosLayout (formulário não visível em telas menores)
 - [x] Corrigir layout responsivo do ImoveisLayout (mesmo problema)
+
+## Módulo Gestão de Obras
+
+### Estrutura e Navegação
+- [x] Abas: Nova Obra, Obras em Andamento, Obras Arquivadas
+- [x] Abas: Novo Relatório, Adicionar Imagem, Calendário de Tarefas
+- [x] Abas: Empreiteiros (Cadastrar + Ver Base), Arquitetas (Cadastrar + Ver Base)
+
+### Formulário Nova Obra (3 seções)
+- [x] Seção 1 - Informações Básicas: Título, Toggle "Temos a chave", Endereço
+- [x] Seção 2 - Profissionais: Empreiteiro (busca + cadastrar novo), Arquiteta (busca + cadastrar nova)
+- [x] Seção 3 - Características: Tipo (Residencial, Comercial, Reforma, Galpão), Status, Andamento visual (Avançada/Em Dia/Atrasada/Totalmente Atrasada)
+
+### Gestão de Profissionais
+- [x] Cadastro de Empreiteiros (Nome, Contato, Especialidade, CNPJ/CPF)
+- [x] Cadastro de Arquitetas (Nome, Contato, Especialidade, CNPJ/CPF)
+- [x] Vínculo profissionais-obras no banco de dados
+
+### Relatórios e Imagens (Diário de Obra)
+- [x] Novo Relatório vinculado a obra (data, autor, texto rico)
+- [x] Upload de imagens (galeria vinculada a cada obra)
+
+### Calendário de Tarefas
+- [x] Marcos da obra, prazos de entrega e vistorias
+- [x] Integração com relatórios e status do projeto
+
+### Testes do Módulo Gestão de Obras
+- [x] Testes de estrutura dos routers (constructions, contractors, architects, reports, images, tasks)
+- [x] Testes de validação de input (campos obrigatórios)
+- [x] Total: 119 testes passando (5 arquivos)

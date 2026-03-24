@@ -10,6 +10,13 @@ import {
   fleet, InsertFleetVehicle,
   pettyCash, InsertPettyCashEntry,
   tickets, InsertTicket,
+  // Gestão de Obras
+  contractors, InsertContractor,
+  architects, InsertArchitect,
+  constructions, InsertConstruction,
+  constructionReports, InsertConstructionReport,
+  constructionImages, InsertConstructionImage,
+  constructionTasks, InsertConstructionTask,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -860,4 +867,197 @@ export async function deleteBusinessTask(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
   await db.delete(businessTasks).where(eq(businessTasks.id, id));
+}
+
+// ─── MÓDULO GESTÃO DE OBRAS ────────────────────────────────────────────────
+
+// --- Empreiteiros ---
+export async function listContractors() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(contractors).orderBy(contractors.name);
+}
+
+export async function getContractorById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(contractors).where(eq(contractors.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function createContractor(data: InsertContractor) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(contractors).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function updateContractor(id: number, data: Partial<InsertContractor>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(contractors).set(data).where(eq(contractors.id, id));
+}
+
+export async function deleteContractor(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(contractors).where(eq(contractors.id, id));
+}
+
+// --- Arquitetas ---
+export async function listArchitects() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(architects).orderBy(architects.name);
+}
+
+export async function getArchitectById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(architects).where(eq(architects.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function createArchitect(data: InsertArchitect) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(architects).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function updateArchitect(id: number, data: Partial<InsertArchitect>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(architects).set(data).where(eq(architects.id, id));
+}
+
+export async function deleteArchitect(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(architects).where(eq(architects.id, id));
+}
+
+// --- Obras ---
+export async function listConstructions(archived = false) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(constructions).where(eq(constructions.isArchived, archived)).orderBy(constructions.createdAt);
+}
+
+export async function getConstructionById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const rows = await db.select().from(constructions).where(eq(constructions.id, id)).limit(1);
+  return rows[0];
+}
+
+export async function createConstruction(data: InsertConstruction) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(constructions).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function updateConstruction(id: number, data: Partial<InsertConstruction>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(constructions).set(data).where(eq(constructions.id, id));
+}
+
+export async function deleteConstruction(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(constructions).where(eq(constructions.id, id));
+}
+
+export async function getConstructionStats() {
+  const db = await getDb();
+  if (!db) return { emAndamento: 0, paralisada: 0, concluida: 0 };
+  const all = await db.select().from(constructions).where(eq(constructions.isArchived, false));
+  return {
+    emAndamento: all.filter(c => c.status === "em_andamento").length,
+    paralisada: all.filter(c => c.status === "paralisada").length,
+    concluida: all.filter(c => c.status === "concluida").length,
+  };
+}
+
+// --- Relatórios de Obra ---
+export async function listReportsByConstruction(constructionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(constructionReports).where(eq(constructionReports.constructionId, constructionId)).orderBy(constructionReports.reportDate);
+}
+
+export async function listAllReports() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(constructionReports).orderBy(constructionReports.reportDate);
+}
+
+export async function createReport(data: InsertConstructionReport) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(constructionReports).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function deleteReport(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(constructionReports).where(eq(constructionReports.id, id));
+}
+
+// --- Imagens de Obra ---
+export async function listImagesByConstruction(constructionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(constructionImages).where(eq(constructionImages.constructionId, constructionId)).orderBy(constructionImages.uploadedAt);
+}
+
+export async function listAllImages() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(constructionImages).orderBy(constructionImages.uploadedAt);
+}
+
+export async function createImage(data: InsertConstructionImage) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(constructionImages).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function deleteImage(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(constructionImages).where(eq(constructionImages.id, id));
+}
+
+// --- Calendário de Tarefas de Obra ---
+export async function listConstructionTasks(constructionId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+  if (constructionId) {
+    return db.select().from(constructionTasks).where(eq(constructionTasks.constructionId, constructionId)).orderBy(constructionTasks.dueDate);
+  }
+  return db.select().from(constructionTasks).orderBy(constructionTasks.dueDate);
+}
+
+export async function createConstructionTask(data: InsertConstructionTask) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const result = await db.insert(constructionTasks).values(data);
+  return { id: result[0].insertId };
+}
+
+export async function updateConstructionTask(id: number, data: Partial<InsertConstructionTask>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(constructionTasks).set(data).where(eq(constructionTasks.id, id));
+}
+
+export async function deleteConstructionTask(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(constructionTasks).where(eq(constructionTasks.id, id));
 }

@@ -22,6 +22,13 @@ import {
   listNegocios, getNegocio, createNegocio, updateNegocio, deleteNegocio, archiveNegocio, unarchiveNegocio,
   getViabilidade, upsertViabilidade,
   listBusinessTasks, createBusinessTask, updateBusinessTask, deleteBusinessTask,
+  // Gestão de Obras
+  listContractors, getContractorById, createContractor, updateContractor, deleteContractor,
+  listArchitects, getArchitectById, createArchitect, updateArchitect, deleteArchitect,
+  listConstructions, getConstructionById, createConstruction, updateConstruction, deleteConstruction, getConstructionStats,
+  listReportsByConstruction, listAllReports, createReport, deleteReport,
+  listImagesByConstruction, listAllImages, createImage, deleteImage,
+  listConstructionTasks, createConstructionTask, updateConstructionTask, deleteConstructionTask,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -807,8 +814,207 @@ export const appRouter = router({
           ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
         } as any);
       }),
-    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteBusinessTask(input.id)),
+     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteBusinessTask(input.id)),
+  }),
+
+  // ─── MÓDULO GESTÃO DE OBRAS ──────────────────────────────────────────────────
+  contractors: router({
+    list: protectedProcedure.query(async () => listContractors()),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getContractorById(input.id)),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        cpfCnpj: z.string().optional(),
+        specialty: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createContractor(input as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        cpfCnpj: z.string().optional(),
+        specialty: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...rest } = input;
+        await updateContractor(id, rest as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteContractor(input.id)),
+  }),
+
+  architects: router({
+    list: protectedProcedure.query(async () => listArchitects()),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getArchitectById(input.id)),
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        cpfCnpj: z.string().optional(),
+        specialty: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createArchitect(input as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        phone: z.string().optional(),
+        email: z.string().optional(),
+        cpfCnpj: z.string().optional(),
+        specialty: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...rest } = input;
+        await updateArchitect(id, rest as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteArchitect(input.id)),
+  }),
+
+  constructions: router({
+    list: protectedProcedure
+      .input(z.object({ archived: z.boolean().optional() }).optional())
+      .query(async ({ input }) => listConstructions(input?.archived ?? false)),
+    getById: protectedProcedure.input(z.object({ id: z.number() })).query(async ({ input }) => getConstructionById(input.id)),
+    stats: protectedProcedure.query(async () => getConstructionStats()),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        hasKey: z.boolean().optional(),
+        contractorId: z.number().optional(),
+        architectId: z.number().optional(),
+        constructionType: z.enum(["residencial", "comercial", "reforma", "galpao", "loteamento", "outro"]).optional(),
+        status: z.enum(["em_andamento", "paralisada", "concluida"]).optional(),
+        progress: z.enum(["avancada", "em_dia", "atrasada", "totalmente_atrasada"]).optional(),
+        description: z.string().optional(),
+        startDate: z.string().optional(),
+        expectedEndDate: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { startDate, expectedEndDate, ...rest } = input;
+        return createConstruction({
+          ...rest,
+          ...(startDate ? { startDate: new Date(startDate) } : {}),
+          ...(expectedEndDate ? { expectedEndDate: new Date(expectedEndDate) } : {}),
+        } as any);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        hasKey: z.boolean().optional(),
+        contractorId: z.number().nullable().optional(),
+        architectId: z.number().nullable().optional(),
+        constructionType: z.enum(["residencial", "comercial", "reforma", "galpao", "loteamento", "outro"]).optional(),
+        status: z.enum(["em_andamento", "paralisada", "concluida"]).optional(),
+        progress: z.enum(["avancada", "em_dia", "atrasada", "totalmente_atrasada"]).optional(),
+        description: z.string().optional(),
+        isArchived: z.boolean().optional(),
+        startDate: z.string().optional(),
+        expectedEndDate: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, startDate, expectedEndDate, ...rest } = input;
+        await updateConstruction(id, {
+          ...rest,
+          ...(startDate ? { startDate: new Date(startDate) } : {}),
+          ...(expectedEndDate ? { expectedEndDate: new Date(expectedEndDate) } : {}),
+        } as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteConstruction(input.id)),
+  }),
+
+  constructionReports: router({
+    listByConstruction: protectedProcedure.input(z.object({ constructionId: z.number() })).query(async ({ input }) => listReportsByConstruction(input.constructionId)),
+    listAll: protectedProcedure.query(async () => listAllReports()),
+    create: protectedProcedure
+      .input(z.object({
+        constructionId: z.number(),
+        title: z.string().min(1),
+        content: z.string().min(1),
+        author: z.string().optional(),
+        reportDate: z.string(),
+      }))
+      .mutation(async ({ input }) => {
+        const { reportDate, ...rest } = input;
+        return createReport({ ...rest, reportDate: new Date(reportDate) } as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteReport(input.id)),
+  }),
+
+  constructionImages: router({
+    listByConstruction: protectedProcedure.input(z.object({ constructionId: z.number() })).query(async ({ input }) => listImagesByConstruction(input.constructionId)),
+    listAll: protectedProcedure.query(async () => listAllImages()),
+    upload: protectedProcedure
+      .input(z.object({
+        constructionId: z.number(),
+        fileBase64: z.string(),
+        fileName: z.string(),
+        mimeType: z.string(),
+        caption: z.string().optional(),
+        uploadedBy: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const buffer = Buffer.from(input.fileBase64, "base64");
+        const key = `obras/${input.constructionId}/${nanoid()}-${input.fileName}`;
+        const { url } = await storagePut(key, buffer, input.mimeType);
+        return createImage({
+          constructionId: input.constructionId,
+          imageUrl: url,
+          imageKey: key,
+          caption: input.caption,
+          uploadedBy: input.uploadedBy,
+        } as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteImage(input.id)),
+  }),
+
+  constructionTasks: router({
+    list: protectedProcedure
+      .input(z.object({ constructionId: z.number().optional() }).optional())
+      .query(async ({ input }) => listConstructionTasks(input?.constructionId)),
+    create: protectedProcedure
+      .input(z.object({
+        constructionId: z.number().optional(),
+        title: z.string().min(1),
+        description: z.string().optional(),
+        dueDate: z.string(),
+        taskType: z.enum(["marco", "prazo_entrega", "vistoria", "reuniao", "outro"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { dueDate, ...rest } = input;
+        return createConstructionTask({ ...rest, dueDate: new Date(dueDate) } as any);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().optional(),
+        description: z.string().optional(),
+        dueDate: z.string().optional(),
+        taskType: z.enum(["marco", "prazo_entrega", "vistoria", "reuniao", "outro"]).optional(),
+        isCompleted: z.boolean().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, dueDate, ...rest } = input;
+        await updateConstructionTask(id, {
+          ...rest,
+          ...(dueDate ? { dueDate: new Date(dueDate) } : {}),
+        } as any);
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => deleteConstructionTask(input.id)),
   }),
 });
-
 export type AppRouter = typeof appRouter;
