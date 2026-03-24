@@ -349,4 +349,8 @@
 - [x] Criar usuário master (mauri / domobianca2025)
 - [x] Popular 12 categorias de suprimentos + 108 itens
 - [x] Testar todas as funcionalidades (233/233 testes passando)
-- [ ] Atualizar repositório GitHub
+- [x] Atualizar repositório GitHub
+
+## Bug Fixes (Pós-Migração Supabase)
+
+- [x] Login não funciona após migração para Supabase (usuário marceloabreu criado no banco)

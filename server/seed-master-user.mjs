@@ -13,25 +13,25 @@ async function seedMasterUser() {
 
   try {
     // Check if master user already exists
-    const existing = await sql`SELECT id FROM users WHERE username = ${'mauri'}`;
+    const existing = await sql`SELECT id FROM users WHERE username = ${'marceloabreu'}`;
 
     if (existing.length > 0) {
-      console.log("Master user 'mauri' already exists. Updating password...");
-      const hash = await bcrypt.hash("domobianca2025", 10);
-      await sql`UPDATE users SET password_hash = ${hash}, plain_password = ${'domobianca2025'}, role = 'admin', is_active = true, login_method = 'local' WHERE username = ${'mauri'}`;
+      console.log("Master user 'marceloabreu' already exists. Updating password...");
+      const hash = await bcrypt.hash("Ma@468709", 10);
+      await sql`UPDATE users SET password_hash = ${hash}, plain_password = ${'Ma@468709'}, role = 'admin', is_active = true, login_method = 'local' WHERE username = ${'marceloabreu'}`;
       console.log("Master user password updated.");
     } else {
       // Create master user
-      const hash = await bcrypt.hash("domobianca2025", 10);
-      const openId = `local_mauri_${Date.now()}`;
+      const hash = await bcrypt.hash("Ma@468709", 10);
+      const openId = `local_marceloabreu_${Date.now()}`;
       await sql`INSERT INTO users (open_id, username, password_hash, plain_password, name, email, login_method, role, is_active, last_signed_in)
-         VALUES (${openId}, ${'mauri'}, ${hash}, ${'domobianca2025'}, ${'Mauri Carvalho'}, ${'mauri@domobianca.com'}, ${'local'}, 'admin', true, NOW())`;
-      console.log("Master user 'mauri' created successfully!");
+         VALUES (${openId}, ${'marceloabreu'}, ${hash}, ${'Ma@468709'}, ${'Marcelo Abreu'}, ${'marcelo@domobianca.com'}, ${'local'}, 'admin', true, NOW())`;
+      console.log("Master user 'marceloabreu' created successfully!");
     }
 
     console.log("\n=== Credenciais do Master ===");
-    console.log("Usuário: mauri");
-    console.log("Senha: domobianca2025");
+    console.log("Usuário: marceloabreu");
+    console.log("Senha: Ma@468709");
     console.log("Nível: Administrador");
     console.log("============================\n");
   } catch (error) {
