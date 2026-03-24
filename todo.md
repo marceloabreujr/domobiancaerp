@@ -330,3 +330,22 @@
 - [x] Testes de troca de senha
 - [x] Testes de visibilidade de senhas para admin
 - [x] Testes de controle de acesso ao ADM ERP
+
+## Segurança e Privacidade
+
+- [x] Tornar repositório marceloabreujr/domobiancaerp privado
+- [x] Tornar repositório mauricarvalho/woocomerce privado
+- [x] Verificar outros repositórios públicos
+
+## Migração para Supabase (Independência da Manus)
+
+- [ ] Configurar credenciais Supabase (URL, Anon Key, Service Role Key, Database URL)
+- [ ] Instalar dependências PostgreSQL (pg, drizzle-orm/node-postgres)
+- [ ] Migrar schema de SQLite para PostgreSQL (drizzle-orm/pg)
+- [ ] Migrar storage de Manus S3 para Supabase Storage
+- [ ] Atualizar server/db.ts para usar PostgreSQL
+- [ ] Atualizar server/storage.ts para usar Supabase Storage
+- [ ] Fazer push das tabelas para o Supabase
+- [ ] Criar usuário master (marceloabreu / Ma@468709)
+- [ ] Testar todas as funcionalidades
+- [ ] Atualizar repositório GitHub
