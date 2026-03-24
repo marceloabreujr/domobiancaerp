@@ -14,7 +14,7 @@ import {
   listTickets, createTicket, updateTicket, deleteTicket,
   listOwners, getOwner, createOwner, updateOwner, deleteOwner,
   listClients, getClient, createClient, updateClient, deleteClient,
-  listProperties, getProperty, createProperty, updateProperty, deleteProperty, getPropertyStats,
+  listProperties, getProperty, createProperty, updateProperty, deleteProperty, getPropertyStats, getNextPropertyCode,
   listRentalContracts, getRentalContract, createRentalContract, updateRentalContract, deleteRentalContract, getUpcomingRentAlerts, getPropertyFinancialSummary,
   listPropertyTodos, createPropertyTodo, updatePropertyTodo, deletePropertyTodo,
   listPropertyChecklists, createPropertyChecklist, updatePropertyChecklist, deletePropertyChecklist,
@@ -383,7 +383,7 @@ export const appRouter = router({
         code: z.string().optional(),
         ownership: z.enum(["domobianca", "terceiros"]).optional(),
         propertyType: z.enum(["residencial", "apartamento", "galpao", "sala_comercial", "lote", "casa", "cobertura", "kitnet", "outro"]).optional(),
-        status: z.enum(["disponivel", "alugado", "a_venda", "vendido", "arquivado"]).optional(),
+        status: z.enum(["disponivel_locacao", "disponivel_venda", "alugado", "vendido", "arquivado"]).optional(),
         ownerId: z.number().optional(),
         street: z.string().optional(),
         number: z.string().optional(),
@@ -406,7 +406,14 @@ export const appRouter = router({
         description: z.string().optional(),
         features: z.string().optional(),
       }))
-      .mutation(async ({ input }) => createProperty(input as any)),
+      .mutation(async ({ input }) => {
+        // Auto-generate code if not provided
+        if (!input.code) {
+          const type = input.status === "disponivel_venda" ? "venda" : "locacao";
+          input.code = await getNextPropertyCode(type);
+        }
+        return createProperty(input as any);
+      }),
     update: protectedProcedure
       .input(z.object({
         id: z.number(),
@@ -414,7 +421,7 @@ export const appRouter = router({
         code: z.string().optional(),
         ownership: z.enum(["domobianca", "terceiros"]).optional(),
         propertyType: z.enum(["residencial", "apartamento", "galpao", "sala_comercial", "lote", "casa", "cobertura", "kitnet", "outro"]).optional(),
-        status: z.enum(["disponivel", "alugado", "a_venda", "vendido", "arquivado"]).optional(),
+        status: z.enum(["disponivel_locacao", "disponivel_venda", "alugado", "vendido", "arquivado"]).optional(),
         ownerId: z.number().optional(),
         street: z.string().optional(),
         number: z.string().optional(),
@@ -456,13 +463,15 @@ export const appRouter = router({
         occupantCpf: z.string().optional(),
         startDate: z.string(),
         endDate: z.string().optional(),
-        leaseTerm: z.enum(["mensal", "trimestral", "semestral", "anual", "2_anos", "3_anos"]).optional(),
+        leaseTerm: z.enum(["quinzenal", "mensal", "trimestral", "semestral", "anual", "2_anos", "3_anos"]).optional(),
         rentAmount: z.string(),
         condoIncluded: z.boolean().optional(),
         iptuIncluded: z.boolean().optional(),
         isPackage: z.boolean().optional(),
         packageTotal: z.string().optional(),
         adjustmentIndex: z.enum(["igpm", "ipca", "inpc", "nenhum"]).optional(),
+        adjustmentValue: z.string().optional(),
+        nextAdjustmentDate: z.string().optional(),
         billingDay: z.number().optional(),
         lateFeePercent: z.string().optional(),
         dailyInterestPercent: z.string().optional(),
@@ -473,6 +482,7 @@ export const appRouter = router({
           ...input,
           startDate: new Date(input.startDate),
           endDate: input.endDate ? new Date(input.endDate) : undefined,
+          nextAdjustmentDate: input.nextAdjustmentDate ? new Date(input.nextAdjustmentDate) : undefined,
         } as any);
       }),
     update: protectedProcedure

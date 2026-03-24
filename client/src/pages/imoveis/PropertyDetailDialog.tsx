@@ -5,9 +5,9 @@ import { Loader2, MapPin, BedDouble, Bath, Car, Ruler, FileText, Plus } from "lu
 import { useState } from "react";
 import NovoContratoForm from "./NovoContratoForm";
 
-const statusLabels: Record<string, string> = { disponivel: "Disponível", alugado: "Alugado", a_venda: "À Venda", vendido: "Vendido", arquivado: "Arquivado" };
+const statusLabels: Record<string, string> = { disponivel_locacao: "Disponível Locação", disponivel_venda: "Disponível Venda", alugado: "Alugado", vendido: "Vendido", arquivado: "Arquivado" };
 const typeLabels: Record<string, string> = { residencial: "Residencial", apartamento: "Apartamento", galpao: "Galpão", sala_comercial: "Sala Comercial", lote: "Lote", casa: "Casa", cobertura: "Cobertura", kitnet: "Kitnet", outro: "Outro" };
-const leaseLabels: Record<string, string> = { mensal: "Mensal", trimestral: "Trimestral", semestral: "Semestral", anual: "Anual", "2_anos": "2 Anos", "3_anos": "3 Anos" };
+const leaseLabels: Record<string, string> = { quinzenal: "Quinzenal", mensal: "Mensal", trimestral: "Trimestral", semestral: "Semestral", anual: "Anual", "2_anos": "2 Anos", "3_anos": "3 Anos" };
 
 export default function PropertyDetailDialog({ propertyId, open, onClose }: { propertyId: number; open: boolean; onClose: () => void }) {
   const { data: property, isLoading } = trpc.properties.get.useQuery({ id: propertyId });

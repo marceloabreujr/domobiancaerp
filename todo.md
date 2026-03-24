@@ -109,3 +109,24 @@
 - [x] Testes de estrutura dos routers (32 testes)
 - [x] Testes de validação de input (campos obrigatórios)
 - [x] Total: 63 testes passando (3 arquivos)
+
+## Refatoração Módulo Gestão de Imóveis (v2)
+
+### Novo Fluxo de Cadastro
+- [x] Imóvel entra como "Disponível para Locação" ou "Disponível para Venda"
+- [x] Código automático sequencial: LOC-001 para locação, VND-001 para venda
+- [x] Formulário separado para Locação (com contrato completo)
+- [x] Formulário separado para Venda
+
+### Contrato de Locação Completo
+- [x] Data de início do contrato
+- [x] Prazo: quinzenal, mensal, trimestral, semestral, anual, 2 anos, 3 anos
+- [x] Índice de reajuste: IGPM, IPCA, INPC
+- [x] Valor do reajuste anual
+- [x] Data do próximo reajuste
+
+### Fluxo de Status nos Cards
+- [x] Botão "Alugar" no card do imóvel disponível para locação
+- [x] Botão "Vender" no card do imóvel disponível para venda
+- [x] Imóvel alugado vai para aba "Alugados"
+- [x] Imóvel vendido vai para aba "Vendidos"

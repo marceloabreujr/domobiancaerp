@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Building2, Plus, List, CheckCircle, Key, ShoppingBag, Archive, CalendarCheck, Bell, BarChart3, Users, UserCheck, ListTodo } from "lucide-react";
+import { Building2, Plus, List, Key, ShoppingBag, Archive, CalendarCheck, Bell, BarChart3, Users, UserCheck, ListTodo, Home, Tag } from "lucide-react";
 import TodosPage from "./TodosPage";
 import ImoveisListPage from "./ImoveisListPage";
 import NovoImovelPage from "./NovoImovelPage";
@@ -11,14 +11,30 @@ import ResumoFinanceiroPage from "./ResumoFinanceiroPage";
 import ClientesPage from "./ClientesPage";
 import ProprietariosPage from "./ProprietariosPage";
 
-type Section = "todos_imoveis" | "novo_imovel" | "disponiveis" | "alugados" | "a_venda" | "arquivados" | "checklist" | "alertas" | "resumo" | "clientes" | "proprietarios" | "todo_list";
+type Section =
+  | "todos_imoveis"
+  | "novo_locacao"
+  | "novo_venda"
+  | "disponiveis_locacao"
+  | "disponiveis_venda"
+  | "alugados"
+  | "vendidos"
+  | "arquivados"
+  | "checklist"
+  | "alertas"
+  | "resumo"
+  | "clientes"
+  | "proprietarios"
+  | "todo_list";
 
-const sidebarItems: Array<{ id: Section; label: string; icon: any; separator?: boolean }> = [
-  { id: "novo_imovel", label: "Novo Imóvel", icon: Plus },
-  { id: "todos_imoveis", label: "Todos", icon: List },
-  { id: "disponiveis", label: "Disponíveis", icon: CheckCircle },
+const sidebarItems: Array<{ id: Section; label: string; icon: any; separator?: boolean; highlight?: boolean }> = [
+  { id: "novo_locacao", label: "Novo p/ Locação", icon: Plus, highlight: true },
+  { id: "novo_venda", label: "Novo p/ Venda", icon: Tag, highlight: true },
+  { id: "todos_imoveis", label: "Todos os Imóveis", icon: List, separator: true },
+  { id: "disponiveis_locacao", label: "Disponíveis Locação", icon: Home },
+  { id: "disponiveis_venda", label: "Disponíveis Venda", icon: ShoppingBag },
   { id: "alugados", label: "Alugados", icon: Key },
-  { id: "a_venda", label: "À Venda", icon: ShoppingBag },
+  { id: "vendidos", label: "Vendidos", icon: ShoppingBag },
   { id: "arquivados", label: "Arquivados", icon: Archive },
   { id: "checklist", label: "Checklist Mensal", icon: CalendarCheck, separator: true },
   { id: "alertas", label: "Alertas de Cobrança", icon: Bell },
@@ -34,11 +50,13 @@ export default function ImoveisLayout() {
 
   const renderContent = () => {
     switch (activeSection) {
-      case "novo_imovel": return <NovoImovelPage onSuccess={() => setActiveSection("todos_imoveis")} />;
+      case "novo_locacao": return <NovoImovelPage mode="locacao" onSuccess={() => setActiveSection("disponiveis_locacao")} />;
+      case "novo_venda": return <NovoImovelPage mode="venda" onSuccess={() => setActiveSection("disponiveis_venda")} />;
       case "todos_imoveis": return <ImoveisListPage statusFilter={undefined} />;
-      case "disponiveis": return <ImoveisListPage statusFilter="disponivel" />;
+      case "disponiveis_locacao": return <ImoveisListPage statusFilter="disponivel_locacao" />;
+      case "disponiveis_venda": return <ImoveisListPage statusFilter="disponivel_venda" />;
       case "alugados": return <ImoveisListPage statusFilter="alugado" />;
-      case "a_venda": return <ImoveisListPage statusFilter="a_venda" />;
+      case "vendidos": return <ImoveisListPage statusFilter="vendido" />;
       case "arquivados": return <ImoveisListPage statusFilter="arquivado" />;
       case "checklist": return <ChecklistPage />;
       case "alertas": return <AlertasCobrancaPage />;
@@ -70,6 +88,8 @@ export default function ImoveisLayout() {
                   className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
                     activeSection === item.id
                       ? "bg-primary/10 text-primary font-medium"
+                      : item.highlight
+                      ? "text-primary/80 hover:bg-primary/5 hover:text-primary font-medium"
                       : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                   }`}
                 >

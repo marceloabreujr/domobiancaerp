@@ -209,7 +209,7 @@ export const properties = mysqlTable("properties", {
   title: varchar("title", { length: 255 }).notNull(),
   ownership: mysqlEnum("ownership", ["domobianca", "terceiros"]).default("domobianca").notNull(),
   propertyType: mysqlEnum("propertyType", ["residencial", "apartamento", "galpao", "sala_comercial", "lote", "casa", "cobertura", "kitnet", "outro"]).default("residencial").notNull(),
-  status: mysqlEnum("status", ["disponivel", "alugado", "a_venda", "vendido", "arquivado"]).default("disponivel").notNull(),
+  status: mysqlEnum("status", ["disponivel_locacao", "disponivel_venda", "alugado", "vendido", "arquivado"]).default("disponivel_locacao").notNull(),
   ownerId: int("ownerId"),
   // Endereço
   street: varchar("street", { length: 255 }),
@@ -254,7 +254,7 @@ export const rentalContracts = mysqlTable("rental_contracts", {
   // Datas
   startDate: date("startDate").notNull(),
   endDate: date("endDate"),
-  leaseTerm: mysqlEnum("leaseTerm", ["mensal", "trimestral", "semestral", "anual", "2_anos", "3_anos"]).default("anual").notNull(),
+  leaseTerm: mysqlEnum("leaseTerm", ["quinzenal", "mensal", "trimestral", "semestral", "anual", "2_anos", "3_anos"]).default("anual").notNull(),
   // Valores
   rentAmount: decimal("rentAmount", { precision: 12, scale: 2 }).notNull(),
   condoIncluded: boolean("condoIncluded").default(false),
@@ -263,6 +263,8 @@ export const rentalContracts = mysqlTable("rental_contracts", {
   packageTotal: decimal("packageTotal", { precision: 12, scale: 2 }),
   // Reajuste
   adjustmentIndex: mysqlEnum("adjustmentIndex", ["igpm", "ipca", "inpc", "nenhum"]).default("igpm").notNull(),
+  adjustmentValue: decimal("adjustmentValue", { precision: 12, scale: 2 }),
+  nextAdjustmentDate: date("nextAdjustmentDate"),
   // Cobrança
   billingDay: int("billingDay").default(10),
   lateFeePercent: decimal("lateFeePercent", { precision: 5, scale: 2 }).default("2.00"),

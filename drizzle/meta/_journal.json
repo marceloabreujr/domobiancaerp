@@ -29,6 +29,20 @@
       "when": 1774368251219,
       "tag": "0003_supreme_fenris",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1774369273223,
+      "tag": "0004_cute_professor_monster",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1774369524902,
+      "tag": "0005_narrow_brood",
+      "breakpoints": true
     }
   ]
 }

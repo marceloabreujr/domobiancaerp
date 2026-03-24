@@ -423,6 +423,18 @@ export async function getProperty(id: number) {
   return r[0];
 }
 
+export async function getNextPropertyCode(type: "locacao" | "venda") {
+  const db = await getDb();
+  if (!db) return type === "locacao" ? "LOC-001" : "VND-001";
+  const prefix = type === "locacao" ? "LOC" : "VND";
+  const result = await db.select({ code: properties.code }).from(properties)
+    .where(sql`${properties.code} LIKE ${prefix + '-%'}`)
+    .orderBy(desc(properties.code)).limit(1);
+  if (result.length === 0) return `${prefix}-001`;
+  const lastNum = parseInt(result[0].code?.replace(`${prefix}-`, "") || "0");
+  return `${prefix}-${String(lastNum + 1).padStart(3, "0")}`;
+}
+
 export async function createProperty(data: InsertProperty) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
@@ -444,12 +456,12 @@ export async function deleteProperty(id: number) {
 
 export async function getPropertyStats() {
   const db = await getDb();
-  if (!db) return { total: 0, disponivel: 0, alugado: 0, a_venda: 0, arquivado: 0 };
+  if (!db) return { total: 0, disponivel_locacao: 0, disponivel_venda: 0, alugado: 0, vendido: 0, arquivado: 0 };
   const result = await db.select({
     status: properties.status,
     count: sql<number>`COUNT(*)`,
   }).from(properties).groupBy(properties.status);
-  const stats: Record<string, number> = { total: 0, disponivel: 0, alugado: 0, a_venda: 0, vendido: 0, arquivado: 0 };
+  const stats: Record<string, number> = { total: 0, disponivel_locacao: 0, disponivel_venda: 0, alugado: 0, vendido: 0, arquivado: 0 };
   for (const row of result) {
     stats[row.status] = Number(row.count);
     stats.total += Number(row.count);
