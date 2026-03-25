@@ -415,3 +415,4 @@
 - [x] Apagar todos os dados de teste de todas as tabelas do banco (bank_imports, supply_categories, supply_items)
 - [x] Apagar usuário de teste (newuser)
 - [x] Manter apenas usuários reais (marceloabreu + OAuth ID 1)
+- [x] Apagar todas as tarefas restantes que aparecem no calendário (IPTU Apt 101 repetido) - banco já estava limpo, era cache do navegador

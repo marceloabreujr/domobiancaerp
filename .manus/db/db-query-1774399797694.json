@@ -1,0 +1,30 @@
+{
+  "query": "SELECT 'time_off' as tbl, COUNT(*) as cnt FROM time_off UNION ALL SELECT 'tickets', COUNT(*) FROM tickets UNION ALL SELECT 'owners', COUNT(*) FROM owners UNION ALL SELECT 'rental_contracts', COUNT(*) FROM rental_contracts UNION ALL SELECT 'viabilidade', COUNT(*) FROM viabilidade;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SELECT 'time_off' as tbl, COUNT(*) as cnt FROM time_off UNION ALL SELECT 'tickets', COUNT(*) FROM tickets UNION ALL SELECT 'owners', COUNT(*) FROM owners UNION ALL SELECT 'rental_contracts', COUNT(*) FROM rental_contracts UNION ALL SELECT 'viabilidade', COUNT(*) FROM viabilidade;",
+  "rows": [
+    {
+      "tbl": "rental_contracts",
+      "cnt": "0"
+    },
+    {
+      "tbl": "time_off",
+      "cnt": "0"
+    },
+    {
+      "tbl": "viabilidade",
+      "cnt": "0"
+    },
+    {
+      "tbl": "tickets",
+      "cnt": "0"
+    },
+    {
+      "tbl": "owners",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nrental_contracts\t0\ntime_off\t0\nviabilidade\t0\ntickets\t0\nowners\t0\n",
+  "stderr": "",
+  "execution_time_ms": 85
+}

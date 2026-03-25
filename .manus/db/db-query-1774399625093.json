@@ -1,0 +1,42 @@
+{
+  "query": "SELECT 'calendar_events' as tbl, COUNT(*) as cnt FROM calendar_events UNION ALL SELECT 'property_todos', COUNT(*) FROM property_todos UNION ALL SELECT 'business_tasks', COUNT(*) FROM business_tasks UNION ALL SELECT 'construction_tasks', COUNT(*) FROM construction_tasks UNION ALL SELECT 'financial_entries', COUNT(*) FROM financial_entries UNION ALL SELECT 'construction_checklist', COUNT(*) FROM construction_checklist UNION ALL SELECT 'recurring_bills', COUNT(*) FROM recurring_bills UNION ALL SELECT 'petty_cash', COUNT(*) FROM petty_cash;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SELECT 'calendar_events' as tbl, COUNT(*) as cnt FROM calendar_events UNION ALL SELECT 'property_todos', COUNT(*) FROM property_todos UNION ALL SELECT 'business_tasks', COUNT(*) FROM business_tasks UNION ALL SELECT 'construction_tasks', COUNT(*) FROM construction_tasks UNION ALL SELECT 'financial_entries', COUNT(*) FROM financial_entries UNION ALL SELECT 'construction_checklist', COUNT(*) FROM construction_checklist UNION ALL SELECT 'recurring_bills', COUNT(*) FROM recurring_bills UNION ALL SELECT 'petty_cash', COUNT(*) FROM petty_cash;",
+  "rows": [
+    {
+      "tbl": "business_tasks",
+      "cnt": "0"
+    },
+    {
+      "tbl": "calendar_events",
+      "cnt": "0"
+    },
+    {
+      "tbl": "property_todos",
+      "cnt": "0"
+    },
+    {
+      "tbl": "financial_entries",
+      "cnt": "0"
+    },
+    {
+      "tbl": "construction_tasks",
+      "cnt": "0"
+    },
+    {
+      "tbl": "construction_checklist",
+      "cnt": "0"
+    },
+    {
+      "tbl": "petty_cash",
+      "cnt": "0"
+    },
+    {
+      "tbl": "recurring_bills",
+      "cnt": "0"
+    }
+  ],
+  "messages": [],
+  "stdout": "tbl\tcnt\nbusiness_tasks\t0\ncalendar_events\t0\nproperty_todos\t0\nfinancial_entries\t0\nconstruction_tasks\t0\nconstruction_checklist\t0\npetty_cash\t0\nrecurring_bills\t0\n",
+  "stderr": "",
+  "execution_time_ms": 133
+}
