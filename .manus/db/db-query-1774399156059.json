@@ -1,0 +1,31 @@
+{
+  "query": "SELECT id, username, name, role, isActive FROM users LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SELECT id, username, name, role, isActive FROM users LIMIT 10;",
+  "rows": [
+    {
+      "id": "1",
+      "username": "NULL",
+      "name": "Novo Nome",
+      "role": "admin",
+      "isActive": "1"
+    },
+    {
+      "id": "90243",
+      "username": "marceloabreu",
+      "name": "Marcelo Abreu",
+      "role": "admin",
+      "isActive": "1"
+    },
+    {
+      "id": "90244",
+      "username": "newuser",
+      "name": "New User",
+      "role": "operador",
+      "isActive": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tusername\tname\trole\tisActive\n1\tNULL\tNovo Nome\tadmin\t1\n90243\tmarceloabreu\tMarcelo Abreu\tadmin\t1\n90244\tnewuser\tNew User\toperador\t1\n",
+  "stderr": "",
+  "execution_time_ms": 73
+}

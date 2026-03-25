@@ -1,0 +1,115 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "architects"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "bank_imports"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "bank_transactions"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "business_tasks"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "calendar_events"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "captadores"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "clients"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "construction_checklist"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "construction_images"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "construction_reports"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "construction_supply_items"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "construction_tasks"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "constructions"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "contractors"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "documents"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "employees"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "financial_entries"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "fleet"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "negocios"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "owners"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "petty_cash"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "properties"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "property_checklists"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "property_todos"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "recurring_bills"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "rental_contracts"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "supplies"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "supply_categories"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "supply_files"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "supply_items"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "tickets"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "time_off"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "users"
+    },
+    {
+      "Tables_in_Q6KmuLRVEJvMMwrcioBya4": "viabilidade"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_Q6KmuLRVEJvMMwrcioBya4\n__drizzle_migrations\narchitects\nbank_imports\nbank_transactions\nbusiness_tasks\ncalendar_events\ncaptadores\nclients\nconstruction_checklist\nconstruction_images\nconstruction_reports\nconstruction_supply_items\nconstruction_tasks\nconstructions\ncontractors\ndocuments\nemployees\nfinancial_entries\nfleet\nnegocios\nowners\npetty_cash\nproperties\nproperty_checklists\nproperty_todos\nrecurring_bills\nrental_contracts\nsupplies\nsupply_categories\nsupply_files\nsupply_items\ntickets\ntime_off\nusers\nviabilidade\n",
+  "stderr": "",
+  "execution_time_ms": 125
+}

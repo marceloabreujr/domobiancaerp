@@ -409,3 +409,9 @@
 
 - [x] Adicionar logo Domobianca grande e bonita na página de login
 - [x] Adicionar logo Domobianca na tela pública Home (botão Entrar/OAuth)
+
+## Limpeza de Dados de Teste
+
+- [x] Apagar todos os dados de teste de todas as tabelas do banco (bank_imports, supply_categories, supply_items)
+- [x] Apagar usuário de teste (newuser)
+- [x] Manter apenas usuários reais (marceloabreu + OAuth ID 1)

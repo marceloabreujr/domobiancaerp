@@ -1,0 +1,35 @@
+{
+  "query": "SELECT id, siName, siCategoryId FROM supply_items LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SELECT id, siName, siCategoryId FROM supply_items LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "siName": "Projeto Arquitetônico",
+      "siCategoryId": "1"
+    },
+    {
+      "id": "2",
+      "siName": "Projeto Estrutural",
+      "siCategoryId": "1"
+    },
+    {
+      "id": "3",
+      "siName": "Projeto Elétrico",
+      "siCategoryId": "1"
+    },
+    {
+      "id": "4",
+      "siName": "Projeto Hidrossanitário",
+      "siCategoryId": "1"
+    },
+    {
+      "id": "5",
+      "siName": "Sondagem de Solo",
+      "siCategoryId": "1"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tsiName\tsiCategoryId\n1\tProjeto Arquitetônico\t1\n2\tProjeto Estrutural\t1\n3\tProjeto Elétrico\t1\n4\tProjeto Hidrossanitário\t1\n5\tSondagem de Solo\t1\n",
+  "stderr": "",
+  "execution_time_ms": 59
+}
