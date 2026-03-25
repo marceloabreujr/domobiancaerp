@@ -88,15 +88,14 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="flex flex-col items-center gap-8 p-8 max-w-md w-full">
-          <div className="flex flex-col items-center gap-4">
-            <div className="h-14 w-14 rounded-xl bg-primary flex items-center justify-center">
-              <Building2 className="h-7 w-7 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-semibold tracking-tight text-center text-foreground">
-              Domobianca ERP
-            </h1>
+          <div className="flex flex-col items-center gap-5">
+            <img
+              src="https://d2xsxph8kpxj0f.cloudfront.net/310519663154903625/Q6KmuLRVEJvMMwrcioBya4/domobianca_logo_transparent_455edacf.png"
+              alt="Domobianca"
+              className="w-72 sm:w-80 h-auto drop-shadow-md"
+            />
             <p className="text-sm text-muted-foreground text-center max-w-sm">
               Sistema de gestão empresarial. Faça login para acessar o painel.
             </p>
@@ -106,7 +105,7 @@ export default function DashboardLayout({
               window.location.href = "/login";
             }}
             size="lg"
-            className="w-full shadow-lg hover:shadow-xl transition-all"
+            className="w-full shadow-lg hover:shadow-xl transition-all bg-[#30481d] hover:bg-[#3d5c26] text-white"
           >
             Entrar
           </Button>

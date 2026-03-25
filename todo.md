@@ -408,3 +408,4 @@
 ## Identidade Visual - Logo na Área de Login
 
 - [x] Adicionar logo Domobianca grande e bonita na página de login
+- [x] Adicionar logo Domobianca na tela pública Home (botão Entrar/OAuth)
