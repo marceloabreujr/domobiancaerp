@@ -367,3 +367,40 @@
 - [x] Tipografia: text-2xl → text-xl sm:text-2xl em todos os títulos
 - [x] Dialogs: full-width no mobile (max-width calc)
 - [x] Body: overflow-x hidden no mobile
+
+## Deploy e GitHub
+
+- [x] Atualizar repositório GitHub com mudanças mobile-friendly
+- [ ] Publicar site online via Manus
+
+## Financeiro - Filtro por Mês
+
+- [x] Adicionar seletor de mês/ano no header do Financeiro
+- [x] Filtrar Contas a Pagar por mês de vencimento
+- [x] Filtrar Contas a Receber por mês de vencimento
+- [x] Filtrar Dashboard Financeiro por mês (resumo, KPIs)
+- [x] Contas Recorrentes: lista de configurações (não depende de mês)
+- [x] Conciliação Bancária: baseada em importações CSV (não depende de mês)
+
+## Calendário Central de Tarefas
+
+- [x] Nova aba "Calendário" no painel principal (sidebar)
+- [x] Agregar tarefas de todos os módulos (Obras, Imóveis, Negócios, Financeiro, Administrativo)
+- [x] Visualização mensal com destaque de dias com tarefas (dots coloridos por módulo)
+- [x] Filtro por módulo de origem
+- [x] KPIs: total, concluídas, pendentes, atrasadas
+- [x] Painel lateral de detalhes do dia selecionado
+- [x] Seção de tarefas atrasadas com destaque visual
+
+## Separação por Usuário
+
+- [x] Cada usuário vê apenas suas tarefas no calendário (backend filtra por assignedTo)
+- [x] Admin vê tudo de todos os usuários
+- [x] Admin pode filtrar por usuário específico (dropdown de usuários)
+- [x] Campo "atribuído a" (assignedTo) nas tabelas de tarefas
+- [x] Endpoint protegido centralCalendar.usersList (sem dados sensíveis)
+- [ ] Push para marceloabreujr/domobianca-erp
+
+## Limpeza de Dados
+
+- [x] Apagar dados de teste do banco (94 financial_entries, 5 recurring_bills, 15 bank_transactions)

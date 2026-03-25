@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Loader2, Wallet, TrendingUp, TrendingDown, FileSpreadsheet, RefreshCw, BarChart3, Plus } from "lucide-react";
+import { Loader2, Wallet, TrendingUp, TrendingDown, FileSpreadsheet, RefreshCw, BarChart3, ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import DashboardFinanceiro from "./financeiro/DashboardFinanceiro";
 import ContasReceber from "./financeiro/ContasReceber";
 import ContasPagar from "./financeiro/ContasPagar";
@@ -24,9 +25,64 @@ const navItems: Array<{ id: Section; label: string; icon: any; highlight?: boole
   { id: "conciliacao", label: "Conciliação", icon: FileSpreadsheet },
 ];
 
+const MONTH_NAMES = [
+  "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+  "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+];
+
+export interface MonthFilter {
+  month: number; // 0-11
+  year: number;
+  startDate: string; // YYYY-MM-DD
+  endDate: string; // YYYY-MM-DD
+}
+
+function getMonthFilter(month: number, year: number): MonthFilter {
+  const startDate = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const endDate = `${year}-${String(month + 1).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+  return { month, year, startDate, endDate };
+}
+
 export default function Financeiro() {
   const [activeSection, setActiveSection] = useState<Section>("dashboard");
   const { user, loading, isAuthenticated } = useAuth();
+
+  // Estado do mês/ano selecionado
+  const now = new Date();
+  const [selectedMonth, setSelectedMonth] = useState(now.getMonth());
+  const [selectedYear, setSelectedYear] = useState(now.getFullYear());
+
+  const monthFilter = useMemo(
+    () => getMonthFilter(selectedMonth, selectedYear),
+    [selectedMonth, selectedYear]
+  );
+
+  function goToPreviousMonth() {
+    if (selectedMonth === 0) {
+      setSelectedMonth(11);
+      setSelectedYear(selectedYear - 1);
+    } else {
+      setSelectedMonth(selectedMonth - 1);
+    }
+  }
+
+  function goToNextMonth() {
+    if (selectedMonth === 11) {
+      setSelectedMonth(0);
+      setSelectedYear(selectedYear + 1);
+    } else {
+      setSelectedMonth(selectedMonth + 1);
+    }
+  }
+
+  function goToCurrentMonth() {
+    const now = new Date();
+    setSelectedMonth(now.getMonth());
+    setSelectedYear(now.getFullYear());
+  }
+
+  const isCurrentMonth = selectedMonth === now.getMonth() && selectedYear === now.getFullYear();
 
   if (loading) {
     return (
@@ -45,12 +101,12 @@ export default function Financeiro() {
 
   const renderContent = () => {
     switch (activeSection) {
-      case "dashboard": return <DashboardFinanceiro />;
-      case "contas_receber": return <ContasReceber />;
-      case "contas_pagar": return <ContasPagar />;
+      case "dashboard": return <DashboardFinanceiro monthFilter={monthFilter} />;
+      case "contas_receber": return <ContasReceber monthFilter={monthFilter} />;
+      case "contas_pagar": return <ContasPagar monthFilter={monthFilter} />;
       case "recorrentes": return <ContasRecorrentes />;
       case "conciliacao": return <ConciliacaoBancaria />;
-      default: return <DashboardFinanceiro />;
+      default: return <DashboardFinanceiro monthFilter={monthFilter} />;
     }
   };
 
@@ -59,10 +115,54 @@ export default function Financeiro() {
       <div className="flex flex-col h-full">
         {/* Header do módulo */}
         <div className="border-b border-border bg-background px-4 pt-4 pb-0">
-          <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
-            <Wallet className="h-5 w-5" />
-            Financeiro
-          </h2>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
+            <h2 className="text-lg font-semibold flex items-center gap-2">
+              <Wallet className="h-5 w-5" />
+              Financeiro
+            </h2>
+
+            {/* Seletor de Mês */}
+            <div className="flex items-center gap-1 bg-muted/50 rounded-lg px-1 py-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={goToPreviousMonth}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <button
+                onClick={goToCurrentMonth}
+                className={`px-3 py-1 text-sm font-medium rounded-md transition-colors min-w-[140px] text-center ${
+                  isCurrentMonth
+                    ? "bg-primary text-primary-foreground"
+                    : "hover:bg-muted"
+                }`}
+              >
+                {MONTH_NAMES[selectedMonth]} {selectedYear}
+              </button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 w-7 p-0"
+                onClick={goToNextMonth}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+              {!isCurrentMonth && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs ml-1"
+                  onClick={goToCurrentMonth}
+                >
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Hoje
+                </Button>
+              )}
+            </div>
+          </div>
+
           {/* Navegação por abas */}
           <nav className="flex gap-0.5 overflow-x-auto pb-0">
             {navItems.map((item) => (

@@ -13,12 +13,14 @@ import NegociosLayout from "./pages/negocios/NegociosLayout";
 import Configuracoes from "./pages/Configuracoes";
 import AdmErp from "./pages/AdmErp";
 import Login from "./pages/Login";
+import Calendario from "./pages/Calendario";
 
 function Router() {
   return (
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/" component={Home} />
+      <Route path="/calendario" component={Calendario} />
       <Route path="/financeiro" component={Financeiro} />
       <Route path="/administrativo" component={AdminLayout} />
       <Route path="/obras" component={ObrasLayout} />

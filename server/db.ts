@@ -1635,3 +1635,157 @@ export async function getFinancialByProperty() {
   }).from(financialEntries)
     .groupBy(financialEntries.propertyId, financialEntries.costCenter, financialEntries.type);
 }
+
+
+// ─── CALENDÁRIO CENTRAL ──────────────────────────────────────────────────────
+
+export interface UnifiedTask {
+  id: number;
+  source: "calendar" | "property" | "business" | "construction" | "financial";
+  title: string;
+  description: string | null;
+  dueDate: string;
+  isCompleted: boolean;
+  priority: string;
+  assignedTo: number | null;
+  module: string;
+  relatedId: number | null;
+}
+
+export async function getAllTasks(filters?: { startDate?: string; endDate?: string; assignedTo?: number; source?: string }) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const tasks: UnifiedTask[] = [];
+
+  // 1. Calendar Events
+  if (!filters?.source || filters.source === "calendar") {
+    const conditions: any[] = [];
+    if (filters?.startDate) conditions.push(gte(calendarEvents.eventDate, filters.startDate));
+    if (filters?.endDate) conditions.push(lte(calendarEvents.eventDate, filters.endDate));
+    if (filters?.assignedTo) conditions.push(eq(calendarEvents.assignedTo, filters.assignedTo));
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const rows = await db.select().from(calendarEvents).where(where).orderBy(asc(calendarEvents.eventDate));
+    for (const r of rows) {
+      tasks.push({
+        id: r.id,
+        source: "calendar",
+        title: r.title,
+        description: r.description,
+        dueDate: r.eventDate,
+        isCompleted: r.isCompleted ?? false,
+        priority: "normal",
+        assignedTo: r.assignedTo,
+        module: "Administrativo",
+        relatedId: r.relatedEntityId,
+      });
+    }
+  }
+
+  // 2. Property Todos
+  if (!filters?.source || filters.source === "property") {
+    const conditions: any[] = [];
+    if (filters?.startDate) conditions.push(gte(propertyTodos.dueDate, filters.startDate));
+    if (filters?.endDate) conditions.push(lte(propertyTodos.dueDate, filters.endDate));
+    if (filters?.assignedTo) conditions.push(eq(propertyTodos.assignedTo, filters.assignedTo));
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const rows = await db.select().from(propertyTodos).where(where).orderBy(asc(propertyTodos.dueDate));
+    for (const r of rows) {
+      tasks.push({
+        id: r.id,
+        source: "property",
+        title: r.title,
+        description: r.description,
+        dueDate: r.dueDate || "",
+        isCompleted: r.isCompleted ?? false,
+        priority: r.priority,
+        assignedTo: r.assignedTo,
+        module: "Imóveis",
+        relatedId: r.propertyId,
+      });
+    }
+  }
+
+  // 3. Business Tasks
+  if (!filters?.source || filters.source === "business") {
+    const conditions: any[] = [];
+    if (filters?.startDate) conditions.push(gte(businessTasks.dueDate, filters.startDate));
+    if (filters?.endDate) conditions.push(lte(businessTasks.dueDate, filters.endDate));
+    if (filters?.assignedTo) conditions.push(eq(businessTasks.assignedTo, filters.assignedTo));
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const rows = await db.select().from(businessTasks).where(where).orderBy(asc(businessTasks.dueDate));
+    for (const r of rows) {
+      tasks.push({
+        id: r.id,
+        source: "business",
+        title: r.title,
+        description: r.description,
+        dueDate: r.dueDate,
+        isCompleted: r.isCompleted ?? false,
+        priority: r.priority,
+        assignedTo: r.assignedTo,
+        module: "Negócios",
+        relatedId: r.negocioId,
+      });
+    }
+  }
+
+  // 4. Construction Tasks
+  if (!filters?.source || filters.source === "construction") {
+    const conditions: any[] = [];
+    if (filters?.startDate) conditions.push(gte(constructionTasks.dueDate, filters.startDate));
+    if (filters?.endDate) conditions.push(lte(constructionTasks.dueDate, filters.endDate));
+    if (filters?.assignedTo) conditions.push(eq(constructionTasks.assignedTo, filters.assignedTo));
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const rows = await db.select().from(constructionTasks).where(where).orderBy(asc(constructionTasks.dueDate));
+    for (const r of rows) {
+      tasks.push({
+        id: r.id,
+        source: "construction",
+        title: r.title,
+        description: r.description,
+        dueDate: r.dueDate,
+        isCompleted: r.isCompleted ?? false,
+        priority: "normal",
+        assignedTo: r.assignedTo,
+        module: "Obras",
+        relatedId: r.constructionId,
+      });
+    }
+  }
+
+  // 5. Financial entries (vencimentos)
+  if (!filters?.source || filters.source === "financial") {
+    const conditions: any[] = [eq(financialEntries.status, "aberto")];
+    if (filters?.startDate) conditions.push(gte(financialEntries.dueDate, filters.startDate));
+    if (filters?.endDate) conditions.push(lte(financialEntries.dueDate, filters.endDate));
+    const where = and(...conditions);
+    const rows = await db.select().from(financialEntries).where(where).orderBy(asc(financialEntries.dueDate));
+    for (const r of rows) {
+      tasks.push({
+        id: r.id,
+        source: "financial",
+        title: `${r.type === "entrada" ? "Receber" : "Pagar"}: ${r.description}`,
+        description: `${r.category} - R$ ${r.amount}`,
+        dueDate: r.dueDate,
+        isCompleted: r.status === "pago",
+        priority: "normal",
+        assignedTo: null,
+        module: "Financeiro",
+        relatedId: r.propertyId,
+      });
+    }
+  }
+
+  // Ordenar por data
+  tasks.sort((a, b) => a.dueDate.localeCompare(b.dueDate));
+
+  return tasks;
+}
+
+// Lista simplificada de usuários ativos (sem dados sensíveis) - acessível a qualquer usuário autenticado
+export async function listUsersSimple() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select({ id: users.id, name: users.name, username: users.username }).from(users).where(eq(users.isActive, true));
+}

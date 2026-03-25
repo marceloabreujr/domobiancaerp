@@ -25,6 +25,7 @@ import { useIsMobile } from "@/hooks/useMobile";
 import {
   Briefcase,
   Building2,
+  CalendarDays,
   ClipboardList,
   HardHat,
   LayoutDashboard,
@@ -53,6 +54,7 @@ const ROLE_COLORS: Record<string, string> = {
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Painel", path: "/" },
+  { icon: CalendarDays, label: "Calendário", path: "/calendario" },
   { icon: Wallet, label: "Financeiro", path: "/financeiro" },
   { icon: ClipboardList, label: "Administrativo", path: "/administrativo" },
   { icon: HardHat, label: "Obras", path: "/obras" },

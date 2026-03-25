@@ -135,6 +135,7 @@ export const calendarEvents = pgTable("calendar_events", {
   relatedEntityId: integer("related_entity_id"),
   alertDaysBefore: integer("alert_days_before").default(7),
   isCompleted: boolean("is_completed").default(false),
+  assignedTo: integer("assigned_to"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -341,6 +342,7 @@ export const propertyTodos = pgTable("property_todos", {
   priority: todoPriorityEnum("priority").default("media").notNull(),
   isCompleted: boolean("is_completed").default(false),
   createdBy: integer("created_by"),
+  assignedTo: integer("assigned_to"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -461,6 +463,7 @@ export const businessTasks = pgTable("business_tasks", {
   priority: taskPriorityEnum("priority").default("normal").notNull(),
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
+  assignedTo: integer("assigned_to"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -569,6 +572,7 @@ export const constructionTasks = pgTable("construction_tasks", {
   taskType: cTaskTypeEnum("task_type").default("outro").notNull(),
   isCompleted: boolean("is_completed").default(false),
   completedAt: timestamp("completed_at"),
+  assignedTo: integer("assigned_to"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

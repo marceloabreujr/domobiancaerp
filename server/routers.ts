@@ -45,6 +45,9 @@ import {
   listBankImports, createBankImport, updateBankImport,
   listBankTransactions, createBankTransaction, createBankTransactionsBatch, updateBankTransaction,
   conciliateTransaction, findConciliationCandidates,
+  // Calendário Central
+  getAllTasks,
+  listUsersSimple,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -53,6 +56,27 @@ import { nanoid } from "nanoid";
 
 export const appRouter = router({
   system: systemRouter,
+
+  // ─── CALENDÁRIO CENTRAL ─────────────────────────────────────────────────
+  centralCalendar: router({
+    tasks: protectedProcedure
+      .input(z.object({
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        assignedTo: z.number().optional(),
+        source: z.string().optional(),
+      }).optional())
+      .query(async ({ input, ctx }) => {
+        // Non-admin users can only see their own tasks
+        const effectiveFilters = { ...input };
+        if (ctx.user.role !== 'admin') {
+          effectiveFilters.assignedTo = ctx.user.id;
+        }
+        return getAllTasks(effectiveFilters);
+      }),
+    // Lista simplificada de usuários (sem dados sensíveis) - acessível a qualquer autenticado
+    usersList: protectedProcedure.query(async () => listUsersSimple()),
+  }),
 
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

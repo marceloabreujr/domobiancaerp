@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import type { MonthFilter } from "../Financeiro";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -33,7 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
   atrasado: "bg-red-100 text-red-800",
 };
 
-export default function ContasReceber() {
+export default function ContasReceber({ monthFilter }: { monthFilter: MonthFilter }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showDialog, setShowDialog] = useState(false);
@@ -49,7 +50,11 @@ export default function ContasReceber() {
   });
 
   const utils = trpc.useUtils();
-  const { data: entries, isLoading } = trpc.financial.entries.list.useQuery({ type: "entrada" });
+  const { data: entries, isLoading } = trpc.financial.entries.list.useQuery({
+    type: "entrada",
+    startDate: monthFilter.startDate,
+    endDate: monthFilter.endDate,
+  });
   const { data: properties } = trpc.properties.list.useQuery();
   const { data: contracts } = trpc.rentalContracts.list.useQuery();
 
@@ -147,7 +152,7 @@ export default function ContasReceber() {
           {filtered.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
               <FileText className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Nenhum lançamento a receber encontrado</p>
+              <p>Nenhum lançamento a receber neste mês</p>
             </div>
           ) : (
             <div className="overflow-x-auto">

@@ -2,6 +2,7 @@ import { trpc } from "@/lib/trpc";
 import { Loader2, TrendingUp, TrendingDown, AlertTriangle, DollarSign, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import type { MonthFilter } from "../Financeiro";
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(value);
@@ -12,8 +13,11 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("pt-BR");
 }
 
-export default function DashboardFinanceiro() {
-  const { data: summary, isLoading: loadingSummary } = trpc.financial.summary.useQuery({});
+export default function DashboardFinanceiro({ monthFilter }: { monthFilter: MonthFilter }) {
+  const { data: summary, isLoading: loadingSummary } = trpc.financial.summary.useQuery({
+    startDate: monthFilter.startDate,
+    endDate: monthFilter.endDate,
+  });
   const { data: overdue, isLoading: loadingOverdue } = trpc.financial.overdue.useQuery();
   const { data: byProperty, isLoading: loadingByProp } = trpc.financial.byProperty.useQuery();
 
