@@ -404,3 +404,7 @@
 ## Limpeza de Dados
 
 - [x] Apagar dados de teste do banco (94 financial_entries, 5 recurring_bills, 15 bank_transactions)
+
+## Identidade Visual - Logo na Área de Login
+
+- [x] Adicionar logo Domobianca grande e bonita na página de login

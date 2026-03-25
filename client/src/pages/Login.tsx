@@ -3,7 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Building2, Eye, EyeOff, Key, Loader2, Lock, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Key, Loader2, Lock, User } from "lucide-react";
+
+const LOGO_URL = "https://d2xsxph8kpxj0f.cloudfront.net/310519663154903625/Q6KmuLRVEJvMMwrcioBya4/domobianca_logo_transparent_455edacf.png";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -15,19 +17,16 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex flex-col items-center gap-3 mb-8">
-          <div className="h-16 w-16 rounded-2xl bg-slate-800 flex items-center justify-center shadow-lg">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <div className="text-center">
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-              Domobianca ERP
-            </h1>
-            <p className="text-sm text-slate-500 mt-1">
-              Sistema de Gestão Empresarial
-            </p>
-          </div>
+        {/* Logo Domobianca */}
+        <div className="flex flex-col items-center gap-4 mb-10">
+          <img
+            src={LOGO_URL}
+            alt="Domobianca"
+            className="w-72 sm:w-80 h-auto drop-shadow-md"
+          />
+          <p className="text-sm text-slate-500 tracking-wide">
+            Sistema de Gestão Empresarial
+          </p>
         </div>
 
         {mode === "login" ? (
