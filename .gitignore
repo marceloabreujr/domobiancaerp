@@ -4,3 +4,4 @@ node_modules/
 dist/
 *.mjs
 supabase-setup.sql
+supabase-setup.sql

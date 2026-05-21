@@ -52,7 +52,7 @@ export async function getDb() {
     const connStr = process.env.SUPABASE_DB_URL || process.env.DATABASE_URL;
     if (!connStr) { console.warn("[Database] No connection string"); return null; }
     try {
-      const client = postgres(connStr, { ssl: 'require' });
+      const client = postgres(connStr, { ssl: 'require', prepare: false });
       _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
