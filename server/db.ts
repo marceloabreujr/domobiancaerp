@@ -1794,15 +1794,60 @@ export async function listUsersSimple() {
 
 // ─── PROCESSOS — CRÉDITOS JUDICIAIS ─────────────────────────────────────────
 
+// Cria a tabela e os enums de créditos judiciais sob demanda. Necessário porque
+// o banco (gerido pela plataforma Manus) não expõe um passo de migração
+// acessível. O SQL é idempotente e roda apenas uma vez por instância ativa.
+let _creditosTableReady: Promise<void> | null = null;
+async function ensureCreditosJudiciaisTable(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+) {
+  if (!_creditosTableReady) {
+    _creditosTableReady = (async () => {
+      await db.execute(sql.raw(`
+        DO $$ BEGIN
+          CREATE TYPE credito_registro AS ENUM ('sem_registro', 'com_registro');
+        EXCEPTION WHEN duplicate_object THEN null;
+        END $$;
+      `));
+      await db.execute(sql.raw(`
+        DO $$ BEGIN
+          CREATE TYPE credito_stage AS ENUM ('registro_em_andamento', 'desocupado', 'sem_acao_judicial', 'acao_judicial_ordinaria', 'execucao', 'com_pedido_desocupacao');
+        EXCEPTION WHEN duplicate_object THEN null;
+        END $$;
+      `));
+      await db.execute(sql.raw(`
+        CREATE TABLE IF NOT EXISTS creditos_judiciais (
+          id serial PRIMARY KEY NOT NULL,
+          title varchar(255) NOT NULL,
+          process_number varchar(64),
+          address text,
+          value numeric(14, 2),
+          registro_status credito_registro DEFAULT 'sem_registro' NOT NULL,
+          stage credito_stage DEFAULT 'registro_em_andamento' NOT NULL,
+          notes text,
+          created_at timestamp DEFAULT now() NOT NULL,
+          updated_at timestamp DEFAULT now() NOT NULL
+        );
+      `));
+    })().catch((err) => {
+      _creditosTableReady = null;
+      throw err;
+    });
+  }
+  return _creditosTableReady;
+}
+
 export async function listCreditosJudiciais() {
   const db = await getDb();
   if (!db) return [];
+  await ensureCreditosJudiciaisTable(db);
   return db.select().from(creditosJudiciais).orderBy(asc(creditosJudiciais.createdAt));
 }
 
 export async function createCreditoJudicial(data: InsertCreditoJudicial) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureCreditosJudiciaisTable(db);
   const r = await db.insert(creditosJudiciais).values(data).returning({ id: creditosJudiciais.id });
   return { id: r[0].id };
 }
@@ -1810,11 +1855,13 @@ export async function createCreditoJudicial(data: InsertCreditoJudicial) {
 export async function updateCreditoJudicial(id: number, data: Partial<InsertCreditoJudicial>) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureCreditosJudiciaisTable(db);
   await db.update(creditosJudiciais).set({ ...data, updatedAt: new Date() }).where(eq(creditosJudiciais.id, id));
 }
 
 export async function deleteCreditoJudicial(id: number) {
   const db = await getDb();
   if (!db) throw new Error("DB not available");
+  await ensureCreditosJudiciaisTable(db);
   await db.delete(creditosJudiciais).where(eq(creditosJudiciais.id, id));
 }
