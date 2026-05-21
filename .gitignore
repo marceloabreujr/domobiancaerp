@@ -3,3 +3,4 @@ node_modules/
 .manus-logs/
 dist/
 *.mjs
+supabase-setup.sql
