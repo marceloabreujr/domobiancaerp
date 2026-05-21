@@ -799,3 +799,19 @@ export const creditosJudiciais = pgTable("creditos_judiciais", {
 
 export type CreditoJudicial = typeof creditosJudiciais.$inferSelect;
 export type InsertCreditoJudicial = typeof creditosJudiciais.$inferInsert;
+
+// ─── MÓDULO PROCESSOS — IMÓVEIS RETOMADOS (KANBAN) ──────────────────────────
+
+export const imoveisRetomados = pgTable("imoveis_retomados", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  processNumber: varchar("process_number", { length: 64 }),
+  address: text("address"),
+  value: numeric("value", { precision: 14, scale: 2 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type ImovelRetomado = typeof imoveisRetomados.$inferSelect;
+export type InsertImovelRetomado = typeof imoveisRetomados.$inferInsert;

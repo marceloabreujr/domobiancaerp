@@ -1,8 +1,10 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import DashboardLayout from "@/components/DashboardLayout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Gavel, Loader2 } from "lucide-react";
 import CreditosKanban from "./CreditosKanban";
+import ImoveisRetomadosKanban from "./ImoveisRetomadosKanban";
 
 export default function ProcessosLayout() {
   const { loading, isAuthenticated } = useAuth();
@@ -32,7 +34,18 @@ export default function ProcessosLayout() {
           </h2>
         </div>
         <main className="flex-1 p-4 md:p-6 overflow-auto">
-          <CreditosKanban />
+          <Tabs defaultValue="creditos">
+            <TabsList className="mb-4">
+              <TabsTrigger value="creditos">Créditos Judiciais</TabsTrigger>
+              <TabsTrigger value="imoveis">Imóvel Retomado</TabsTrigger>
+            </TabsList>
+            <TabsContent value="creditos">
+              <CreditosKanban />
+            </TabsContent>
+            <TabsContent value="imoveis">
+              <ImoveisRetomadosKanban />
+            </TabsContent>
+          </Tabs>
         </main>
       </div>
     </DashboardLayout>

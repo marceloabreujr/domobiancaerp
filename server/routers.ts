@@ -50,6 +50,7 @@ import {
   listUsersSimple,
   // Processos — Créditos Judiciais
   listCreditosJudiciais, createCreditoJudicial, updateCreditoJudicial, deleteCreditoJudicial,
+  listImoveisRetomados, createImovelRetomado, updateImovelRetomado, deleteImovelRetomado,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -1555,6 +1556,35 @@ export const appRouter = router({
         return { success: true } as const;
       }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteCreditoJudicial(input.id); return { success: true } as const; }),
+  }),
+
+  // ─── MÓDULO PROCESSOS — IMÓVEIS RETOMADOS (KANBAN) ──────────────────────
+  imoveisRetomados: router({
+    list: protectedProcedure.query(async () => listImoveisRetomados()),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        processNumber: z.string().optional(),
+        address: z.string().optional(),
+        value: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => createImovelRetomado(input as any)),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).optional(),
+        processNumber: z.string().optional(),
+        address: z.string().optional(),
+        value: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...rest } = input;
+        await updateImovelRetomado(id, rest as any);
+        return { success: true } as const;
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteImovelRetomado(input.id); return { success: true } as const; }),
   }),
 });
 export type AppRouter = typeof appRouter;

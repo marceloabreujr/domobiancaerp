@@ -42,6 +42,8 @@ import {
   bankTransactions, InsertBankTransaction,
   // Processos — Créditos Judiciais
   creditosJudiciais, InsertCreditoJudicial,
+  // Processos — Imóveis Retomados
+  imoveisRetomados, InsertImovelRetomado,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1864,4 +1866,61 @@ export async function deleteCreditoJudicial(id: number) {
   if (!db) throw new Error("DB not available");
   await ensureCreditosJudiciaisTable(db);
   await db.delete(creditosJudiciais).where(eq(creditosJudiciais.id, id));
+}
+
+// ─── PROCESSOS — IMÓVEIS RETOMADOS ──────────────────────────────────────────
+
+let _imoveisRetomadosTableReady: Promise<void> | null = null;
+async function ensureImoveisRetomadosTable(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+) {
+  if (!_imoveisRetomadosTableReady) {
+    _imoveisRetomadosTableReady = (async () => {
+      await db.execute(sql.raw(`
+        CREATE TABLE IF NOT EXISTS imoveis_retomados (
+          id serial PRIMARY KEY NOT NULL,
+          title varchar(255) NOT NULL,
+          process_number varchar(64),
+          address text,
+          value numeric(14, 2),
+          notes text,
+          created_at timestamp DEFAULT now() NOT NULL,
+          updated_at timestamp DEFAULT now() NOT NULL
+        );
+      `));
+    })().catch((err) => {
+      _imoveisRetomadosTableReady = null;
+      throw err;
+    });
+  }
+  return _imoveisRetomadosTableReady;
+}
+
+export async function listImoveisRetomados() {
+  const db = await getDb();
+  if (!db) return [];
+  await ensureImoveisRetomadosTable(db);
+  return db.select().from(imoveisRetomados).orderBy(asc(imoveisRetomados.createdAt));
+}
+
+export async function createImovelRetomado(data: InsertImovelRetomado) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await ensureImoveisRetomadosTable(db);
+  const r = await db.insert(imoveisRetomados).values(data).returning({ id: imoveisRetomados.id });
+  return { id: r[0].id };
+}
+
+export async function updateImovelRetomado(id: number, data: Partial<InsertImovelRetomado>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await ensureImoveisRetomadosTable(db);
+  await db.update(imoveisRetomados).set({ ...data, updatedAt: new Date() }).where(eq(imoveisRetomados.id, id));
+}
+
+export async function deleteImovelRetomado(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await ensureImoveisRetomadosTable(db);
+  await db.delete(imoveisRetomados).where(eq(imoveisRetomados.id, id));
 }
