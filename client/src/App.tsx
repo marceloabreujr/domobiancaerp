@@ -10,6 +10,7 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import ObrasLayout from "./pages/obras/ObrasLayout";
 import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
 import NegociosLayout from "./pages/negocios/NegociosLayout";
+import ProcessosLayout from "./pages/processos/ProcessosLayout";
 import Configuracoes from "./pages/Configuracoes";
 import AdmErp from "./pages/AdmErp";
 import Login from "./pages/Login";
@@ -27,6 +28,7 @@ function Router() {
       <Route path="/imoveis" component={ImoveisLayout} />
       <Route path="/negocios/:rest*" component={NegociosLayout} />
       <Route path="/negocios" component={NegociosLayout} />
+      <Route path="/processos" component={ProcessosLayout} />
       <Route path="/configuracoes" component={Configuracoes} />
       <Route path="/adm-erp" component={AdmErp} />
       <Route path="/404" component={NotFound} />

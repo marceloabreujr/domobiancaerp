@@ -40,6 +40,8 @@ import {
   recurringBills, InsertRecurringBill,
   bankImports, InsertBankImport,
   bankTransactions, InsertBankTransaction,
+  // Processos — Créditos Judiciais
+  creditosJudiciais, InsertCreditoJudicial,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1788,4 +1790,31 @@ export async function listUsersSimple() {
   const db = await getDb();
   if (!db) return [];
   return db.select({ id: users.id, name: users.name, username: users.username }).from(users).where(eq(users.isActive, true));
+}
+
+// ─── PROCESSOS — CRÉDITOS JUDICIAIS ─────────────────────────────────────────
+
+export async function listCreditosJudiciais() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(creditosJudiciais).orderBy(asc(creditosJudiciais.createdAt));
+}
+
+export async function createCreditoJudicial(data: InsertCreditoJudicial) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  const r = await db.insert(creditosJudiciais).values(data).returning({ id: creditosJudiciais.id });
+  return { id: r[0].id };
+}
+
+export async function updateCreditoJudicial(id: number, data: Partial<InsertCreditoJudicial>) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.update(creditosJudiciais).set({ ...data, updatedAt: new Date() }).where(eq(creditosJudiciais.id, id));
+}
+
+export async function deleteCreditoJudicial(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await db.delete(creditosJudiciais).where(eq(creditosJudiciais.id, id));
 }

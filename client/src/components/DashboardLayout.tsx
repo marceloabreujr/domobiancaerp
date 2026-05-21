@@ -27,6 +27,7 @@ import {
   Building2,
   CalendarDays,
   ClipboardList,
+  Gavel,
   HardHat,
   LayoutDashboard,
   LogOut,
@@ -60,6 +61,7 @@ const menuItems = [
   { icon: HardHat, label: "Obras", path: "/obras" },
   { icon: Building2, label: "Imóveis", path: "/imoveis" },
   { icon: Briefcase, label: "Novas Oportunidades", path: "/negocios" },
+  { icon: Gavel, label: "Processos", path: "/processos" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
