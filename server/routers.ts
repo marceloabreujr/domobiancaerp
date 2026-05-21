@@ -48,6 +48,8 @@ import {
   // Calendário Central
   getAllTasks,
   listUsersSimple,
+  // Processos — Créditos Judiciais
+  listCreditosJudiciais, createCreditoJudicial, updateCreditoJudicial, deleteCreditoJudicial,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -1512,6 +1514,47 @@ export const appRouter = router({
           };
         }),
     }),
+  }),
+
+  // ─── MÓDULO PROCESSOS — CRÉDITOS JUDICIAIS (KANBAN) ─────────────────────
+  creditosJudiciais: router({
+    list: protectedProcedure.query(async () => listCreditosJudiciais()),
+    create: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1),
+        processNumber: z.string().optional(),
+        address: z.string().optional(),
+        value: z.string().optional(),
+        stage: z.enum(["registro_em_andamento", "desocupado", "sem_acao_judicial", "acao_judicial_ordinaria", "execucao", "com_pedido_desocupacao"]).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const stage = input.stage ?? "registro_em_andamento";
+        return createCreditoJudicial({
+          ...input,
+          stage,
+          registroStatus: stage === "registro_em_andamento" ? "sem_registro" : "com_registro",
+        } as any);
+      }),
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).optional(),
+        processNumber: z.string().optional(),
+        address: z.string().optional(),
+        value: z.string().optional(),
+        stage: z.enum(["registro_em_andamento", "desocupado", "sem_acao_judicial", "acao_judicial_ordinaria", "execucao", "com_pedido_desocupacao"]).optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, stage, ...rest } = input;
+        await updateCreditoJudicial(id, {
+          ...rest,
+          ...(stage ? { stage, registroStatus: stage === "registro_em_andamento" ? "sem_registro" : "com_registro" } : {}),
+        } as any);
+        return { success: true } as const;
+      }),
+    delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteCreditoJudicial(input.id); return { success: true } as const; }),
   }),
 });
 export type AppRouter = typeof appRouter;

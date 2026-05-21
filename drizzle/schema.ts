@@ -766,3 +766,36 @@ export const bankTransactions = pgTable("bank_transactions", {
 
 export type BankTransaction = typeof bankTransactions.$inferSelect;
 export type InsertBankTransaction = typeof bankTransactions.$inferInsert;
+
+// ─── MÓDULO PROCESSOS — CRÉDITOS JUDICIAIS (KANBAN) ─────────────────────────
+
+// Fase do registro em cartório
+export const creditoRegistroEnum = pgEnum("credito_registro", ["sem_registro", "com_registro"]);
+
+// Coluna do kanban (cobre as duas fases)
+export const creditoStageEnum = pgEnum("credito_stage", [
+  // Fase: sem registro cartório
+  "registro_em_andamento",
+  // Fase: com registro cartório
+  "desocupado",
+  "sem_acao_judicial",
+  "acao_judicial_ordinaria",
+  "execucao",
+  "com_pedido_desocupacao",
+]);
+
+export const creditosJudiciais = pgTable("creditos_judiciais", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  processNumber: varchar("process_number", { length: 64 }),
+  address: text("address"),
+  value: numeric("value", { precision: 14, scale: 2 }),
+  registroStatus: creditoRegistroEnum("registro_status").default("sem_registro").notNull(),
+  stage: creditoStageEnum("stage").default("registro_em_andamento").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type CreditoJudicial = typeof creditosJudiciais.$inferSelect;
+export type InsertCreditoJudicial = typeof creditosJudiciais.$inferInsert;

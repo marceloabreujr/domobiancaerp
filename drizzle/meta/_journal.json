@@ -15,6 +15,13 @@
       "when": 1774393584019,
       "tag": "0001_yummy_toad_men",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779381146468,
+      "tag": "0002_mature_the_fury",
+      "breakpoints": true
     }
   ]
 }
