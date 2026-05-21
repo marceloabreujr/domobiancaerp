@@ -44,6 +44,8 @@ import {
   creditosJudiciais, InsertCreditoJudicial,
   // Processos — Imóveis Retomados
   imoveisRetomados, InsertImovelRetomado,
+  // Kanban de Aluguéis
+  rentPayments,
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1923,4 +1925,159 @@ export async function deleteImovelRetomado(id: number) {
   if (!db) throw new Error("DB not available");
   await ensureImoveisRetomadosTable(db);
   await db.delete(imoveisRetomados).where(eq(imoveisRetomados.id, id));
+}
+
+// ─── KANBAN DE ALUGUÉIS ─────────────────────────────────────────────────────
+
+let _rentPaymentsTableReady: Promise<void> | null = null;
+async function ensureRentPaymentsTable(
+  db: NonNullable<Awaited<ReturnType<typeof getDb>>>,
+) {
+  if (!_rentPaymentsTableReady) {
+    _rentPaymentsTableReady = (async () => {
+      await db.execute(sql.raw(`
+        CREATE TABLE IF NOT EXISTS rent_payments (
+          id serial PRIMARY KEY NOT NULL,
+          contract_id integer NOT NULL,
+          year integer NOT NULL,
+          month integer NOT NULL,
+          paid_at timestamp DEFAULT now() NOT NULL,
+          created_at timestamp DEFAULT now() NOT NULL
+        );
+      `));
+    })().catch((err) => {
+      _rentPaymentsTableReady = null;
+      throw err;
+    });
+  }
+  return _rentPaymentsTableReady;
+}
+
+export type RentKanbanCard = {
+  contractId: number;
+  propertyId: number;
+  propertyTitle: string;
+  address: string;
+  tenantName: string;
+  tenantPhone: string | null;
+  occupantName: string | null;
+  billingDay: number;
+  rentAmount: string;
+  year: number;
+  month: number;
+  dueDate: string; // YYYY-MM-DD
+  startDate: string | null;
+  endDate: string | null;
+  status: "a_vencer" | "em_atraso" | "em_dia";
+};
+
+function buildAddress(p: {
+  street: string | null;
+  number: string | null;
+  complement: string | null;
+  neighborhood: string | null;
+  city: string | null;
+  state: string | null;
+}): string {
+  const line1 = [p.street, p.number].filter(Boolean).join(", ");
+  const parts = [line1, p.complement, p.neighborhood, p.city, p.state]
+    .filter((v) => v && String(v).trim().length > 0);
+  return parts.join(" - ");
+}
+
+export async function getRentKanban(): Promise<RentKanbanCard[]> {
+  const db = await getDb();
+  if (!db) return [];
+  await ensureRentPaymentsTable(db);
+
+  const contracts = await db
+    .select()
+    .from(rentalContracts)
+    .where(eq(rentalContracts.status, "ativo"));
+  if (contracts.length === 0) return [];
+
+  const props = await db.select().from(properties);
+  const cls = await db.select().from(clients);
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const todayMid = new Date(year, month - 1, now.getDate()).getTime();
+
+  const payments = await db
+    .select()
+    .from(rentPayments)
+    .where(and(eq(rentPayments.year, year), eq(rentPayments.month, month)));
+
+  const propMap = new Map(props.map((p) => [p.id, p]));
+  const clientMap = new Map(cls.map((c) => [c.id, c]));
+  const paidSet = new Set(payments.map((p) => p.contractId));
+
+  return contracts.map((c) => {
+    const prop = propMap.get(c.propertyId);
+    const tenant = clientMap.get(c.tenantId);
+    const billingDay = c.billingDay || 10;
+    const dueDateObj = new Date(year, month - 1, billingDay);
+    const isPaid = paidSet.has(c.id);
+    let status: RentKanbanCard["status"];
+    if (isPaid) status = "em_dia";
+    else if (dueDateObj.getTime() < todayMid) status = "em_atraso";
+    else status = "a_vencer";
+
+    const dd = String(billingDay).padStart(2, "0");
+    const mm = String(month).padStart(2, "0");
+
+    return {
+      contractId: c.id,
+      propertyId: c.propertyId,
+      propertyTitle: prop?.title ?? `Imóvel #${c.propertyId}`,
+      address: prop ? buildAddress(prop) : "",
+      tenantName: tenant?.name ?? c.occupantName ?? "—",
+      tenantPhone: tenant?.phone ?? null,
+      occupantName: c.occupantName ?? null,
+      billingDay,
+      rentAmount: c.rentAmount,
+      year,
+      month,
+      dueDate: `${year}-${mm}-${dd}`,
+      startDate: c.startDate ?? null,
+      endDate: c.endDate ?? null,
+      status,
+    };
+  });
+}
+
+export async function markRentPaid(contractId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await ensureRentPaymentsTable(db);
+  const existing = await db
+    .select()
+    .from(rentPayments)
+    .where(
+      and(
+        eq(rentPayments.contractId, contractId),
+        eq(rentPayments.year, year),
+        eq(rentPayments.month, month),
+      ),
+    )
+    .limit(1);
+  if (existing.length === 0) {
+    await db.insert(rentPayments).values({ contractId, year, month });
+  }
+}
+
+export async function unmarkRentPaid(contractId: number, year: number, month: number) {
+  const db = await getDb();
+  if (!db) throw new Error("DB not available");
+  await ensureRentPaymentsTable(db);
+  await db
+    .delete(rentPayments)
+    .where(
+      and(
+        eq(rentPayments.contractId, contractId),
+        eq(rentPayments.year, year),
+        eq(rentPayments.month, month),
+      ),
+    );
 }

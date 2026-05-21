@@ -815,3 +815,18 @@ export const imoveisRetomados = pgTable("imoveis_retomados", {
 
 export type ImovelRetomado = typeof imoveisRetomados.$inferSelect;
 export type InsertImovelRetomado = typeof imoveisRetomados.$inferInsert;
+
+// ─── KANBAN DE ALUGUÉIS — PAGAMENTOS DE BOLETO ──────────────────────────────
+// Registra o pagamento do boleto de um contrato em um mês/ano específico.
+// A ausência de registro = boleto em aberto (a vencer ou em atraso).
+export const rentPayments = pgTable("rent_payments", {
+  id: serial("id").primaryKey(),
+  contractId: integer("contract_id").notNull(),
+  year: integer("year").notNull(),
+  month: integer("month").notNull(),
+  paidAt: timestamp("paid_at").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type RentPayment = typeof rentPayments.$inferSelect;
+export type InsertRentPayment = typeof rentPayments.$inferInsert;

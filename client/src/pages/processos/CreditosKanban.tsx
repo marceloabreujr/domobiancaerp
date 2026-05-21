@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import {
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   FileText,
   Loader2,
   MapPin,
@@ -63,12 +65,17 @@ function formatBRL(v: string | null) {
 function GroupPanel({
   title,
   accent,
+  count,
+  defaultOpen,
   children,
 }: {
   title: string;
   accent: "amber" | "green";
+  count: number;
+  defaultOpen: boolean;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(defaultOpen);
   const header =
     accent === "amber"
       ? "border-amber-300 bg-amber-100/70 text-amber-800"
@@ -78,11 +85,29 @@ function GroupPanel({
       ? "border-amber-200 bg-amber-50/40"
       : "border-emerald-200 bg-emerald-50/40";
   return (
-    <div className="shrink-0">
-      <div className={`rounded-t-lg border-x border-t px-3 py-2 ${header}`}>
+    <div>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className={`flex w-full items-center gap-2 border px-3 py-2.5 transition-colors ${header} ${
+          open ? "rounded-t-lg" : "rounded-lg"
+        }`}
+      >
+        {open ? (
+          <ChevronDown className="h-4 w-4 shrink-0" />
+        ) : (
+          <ChevronRight className="h-4 w-4 shrink-0" />
+        )}
         <span className="text-xs font-semibold uppercase tracking-wide">{title}</span>
-      </div>
-      <div className={`flex gap-3 rounded-b-lg border p-3 ${body}`}>{children}</div>
+        <span className="ml-auto rounded-full bg-white/70 px-2 py-0.5 text-xs font-medium">
+          {count}
+        </span>
+      </button>
+      {open && (
+        <div className={`flex gap-3 overflow-x-auto rounded-b-lg border border-t-0 p-3 ${body}`}>
+          {children}
+        </div>
+      )}
     </div>
   );
 }
@@ -301,11 +326,21 @@ export default function CreditosKanban() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : (
-        <div className="flex items-start gap-4 overflow-x-auto pb-4">
-          <GroupPanel title="Sem Registro Cartório" accent="amber">
+        <div className="space-y-3 pb-4">
+          <GroupPanel
+            title="Sem Registro Cartório"
+            accent="amber"
+            count={items.filter((c) => c.registroStatus === "sem_registro").length}
+            defaultOpen
+          >
             {STAGES.filter((s) => s.group === "sem_registro").map(renderColumn)}
           </GroupPanel>
-          <GroupPanel title="Com Registro Cartório" accent="green">
+          <GroupPanel
+            title="Com Registro Cartório"
+            accent="green"
+            count={items.filter((c) => c.registroStatus === "com_registro").length}
+            defaultOpen={false}
+          >
             {STAGES.filter((s) => s.group === "com_registro").map(renderColumn)}
           </GroupPanel>
         </div>

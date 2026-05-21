@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import DashboardLayout from "@/components/DashboardLayout";
-import { Building2, Plus, List, Key, ShoppingBag, Archive, CalendarCheck, Bell, BarChart3, Users, UserCheck, ListTodo, Home, Tag } from "lucide-react";
+import { Building2, Plus, List, Key, ShoppingBag, Archive, CalendarCheck, Bell, BarChart3, Users, UserCheck, ListTodo, Home, Tag, KanbanSquare } from "lucide-react";
+import AlugueisKanban from "@/components/AlugueisKanban";
 import TodosPage from "./TodosPage";
 import ImoveisListPage from "./ImoveisListPage";
 import NovoImovelPage from "./NovoImovelPage";
@@ -12,6 +13,7 @@ import ClientesPage from "./ClientesPage";
 import ProprietariosPage from "./ProprietariosPage";
 
 type Section =
+  | "kanban_alugueis"
   | "todos_imoveis"
   | "novo_locacao"
   | "novo_venda"
@@ -28,6 +30,7 @@ type Section =
   | "todo_list";
 
 const navItems: Array<{ id: Section; label: string; icon: any; highlight?: boolean }> = [
+  { id: "kanban_alugueis", label: "Kanban Aluguéis", icon: KanbanSquare },
   { id: "novo_locacao", label: "Novo Locação", icon: Plus, highlight: true },
   { id: "novo_venda", label: "Novo Venda", icon: Tag, highlight: true },
   { id: "todos_imoveis", label: "Todos", icon: List },
@@ -50,6 +53,7 @@ export default function ImoveisLayout() {
 
   const renderContent = () => {
     switch (activeSection) {
+      case "kanban_alugueis": return <AlugueisKanban />;
       case "novo_locacao": return <NovoImovelPage mode="locacao" onSuccess={() => setActiveSection("disponiveis_locacao")} />;
       case "novo_venda": return <NovoImovelPage mode="venda" onSuccess={() => setActiveSection("disponiveis_venda")} />;
       case "todos_imoveis": return <ImoveisListPage statusFilter={undefined} />;

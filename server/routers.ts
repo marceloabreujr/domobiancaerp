@@ -51,6 +51,7 @@ import {
   // Processos — Créditos Judiciais
   listCreditosJudiciais, createCreditoJudicial, updateCreditoJudicial, deleteCreditoJudicial,
   listImoveisRetomados, createImovelRetomado, updateImovelRetomado, deleteImovelRetomado,
+  getRentKanban, markRentPaid, unmarkRentPaid,
 } from "./db";
 import { storagePut } from "./storage";
 import { invokeLLM } from "./_core/llm";
@@ -1585,6 +1586,23 @@ export const appRouter = router({
         return { success: true } as const;
       }),
     delete: protectedProcedure.input(z.object({ id: z.number() })).mutation(async ({ input }) => { await deleteImovelRetomado(input.id); return { success: true } as const; }),
+  }),
+
+  // ─── KANBAN DE ALUGUÉIS ─────────────────────────────────────────────────
+  alugueis: router({
+    kanban: protectedProcedure.query(async () => getRentKanban()),
+    markPaid: protectedProcedure
+      .input(z.object({ contractId: z.number(), year: z.number(), month: z.number() }))
+      .mutation(async ({ input }) => {
+        await markRentPaid(input.contractId, input.year, input.month);
+        return { success: true } as const;
+      }),
+    unmarkPaid: protectedProcedure
+      .input(z.object({ contractId: z.number(), year: z.number(), month: z.number() }))
+      .mutation(async ({ input }) => {
+        await unmarkRentPaid(input.contractId, input.year, input.month);
+        return { success: true } as const;
+      }),
   }),
 });
 export type AppRouter = typeof appRouter;
