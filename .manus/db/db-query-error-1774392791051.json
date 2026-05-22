@@ -1,8 +1,0 @@
-{
-  "query": "SELECT 'financial_entries' as tbl, COUNT(*) as cnt FROM financial_entries UNION ALL SELECT 'properties', COUNT(*) FROM properties UNION ALL SELECT 'rental_contracts', COUNT(*) FROM rental_contracts UNION ALL SELECT 'constructions', COUNT(*) FROM constructions UNION ALL SELECT 'captadores', COUNT(*) FROM captadores UNION ALL SELECT 'clients', COUNT(*) FROM clients UNION ALL SELECT 'proprietarios', COUNT(*) FROM proprietarios UNION ALL SELECT 'employees', COUNT(*) FROM employees UNION ALL SELECT 'documents', COUNT(*) FROM documents UNION ALL SELECT 'contracts', COUNT(*) FROM contracts UNION ALL SELECT 'calendar_events', COUNT(*) FROM calendar_events;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway04.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 49yybNYayBJTrC8.329eb923be36 --database Q6KmuLRVEJvMMwrcioBya4 --execute SELECT 'financial_entries' as tbl, COUNT(*) as cnt FROM financial_entries UNION ALL SELECT 'properties', COUNT(*) FROM properties UNION ALL SELECT 'rental_contracts', COUNT(*) FROM rental_contracts UNION ALL SELECT 'constructions', COUNT(*) FROM constructions UNION ALL SELECT 'captadores', COUNT(*) FROM captadores UNION ALL SELECT 'clients', COUNT(*) FROM clients UNION ALL SELECT 'proprietarios', COUNT(*) FROM proprietarios UNION ALL SELECT 'employees', COUNT(*) FROM employees UNION ALL SELECT 'documents', COUNT(*) FROM documents UNION ALL SELECT 'contracts', COUNT(*) FROM contracts UNION ALL SELECT 'calendar_events', COUNT(*) FROM calendar_events;",
-  "returncode": 1,
-  "logs": [
-    "ERROR 1146 (42S02) at line 1: Table 'q6kmulrvejvmmwrciobya4.proprietarios' doesn't exist"
-  ]
-}
