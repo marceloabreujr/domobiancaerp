@@ -1,20 +1,33 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/NotFound";
+import { Loader2 } from "lucide-react";
+import { lazy, Suspense } from "react";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
-import Financeiro from "./pages/Financeiro";
-import AdminLayout from "./pages/admin/AdminLayout";
-import ObrasLayout from "./pages/obras/ObrasLayout";
-import ImoveisLayout from "./pages/imoveis/ImoveisLayout";
-import NegociosLayout from "./pages/negocios/NegociosLayout";
-import ProcessosLayout from "./pages/processos/ProcessosLayout";
-import Configuracoes from "./pages/Configuracoes";
-import AdmErp from "./pages/AdmErp";
-import Login from "./pages/Login";
-import Calendario from "./pages/Calendario";
+
+// Cada página é carregada sob demanda (code splitting) — o navegador só
+// baixa o código do módulo quando ele é aberto.
+const Home = lazy(() => import("./pages/Home"));
+const Calendario = lazy(() => import("./pages/Calendario"));
+const Financeiro = lazy(() => import("./pages/Financeiro"));
+const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
+const ObrasLayout = lazy(() => import("./pages/obras/ObrasLayout"));
+const ImoveisLayout = lazy(() => import("./pages/imoveis/ImoveisLayout"));
+const NegociosLayout = lazy(() => import("./pages/negocios/NegociosLayout"));
+const ProcessosLayout = lazy(() => import("./pages/processos/ProcessosLayout"));
+const Configuracoes = lazy(() => import("./pages/Configuracoes"));
+const AdmErp = lazy(() => import("./pages/AdmErp"));
+const Login = lazy(() => import("./pages/Login"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+function PageLoader() {
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
 
 function Router() {
   return (
@@ -43,7 +56,9 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <Suspense fallback={<PageLoader />}>
+            <Router />
+          </Suspense>
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
